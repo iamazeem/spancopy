@@ -30,6 +30,7 @@ jobs:
 
     - name: Build (x86-mingw)
       run: |
+        rm -rf ./build
         CXX=x86_64-w64-mingw32-g++ cmake -S . -B build
         cmake --build build
         ls -Gghl ./build/spancopy.exe
