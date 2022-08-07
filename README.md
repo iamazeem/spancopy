@@ -10,7 +10,7 @@ Usage: spancopy [OPTIONS]
 Options:
   --help                      show usage help
   --size FLOAT:POSITIVE REQUIRED
-                              threshold in GBs to span (copy) files
+                              threshold in GBs
   --source TEXT:DIR REQUIRED  source directory
   --target TEXT:DIR REQUIRED  target directory
 ```
