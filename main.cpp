@@ -12,8 +12,8 @@ int main(int argc, char** argv)
 
     app.set_help_flag("--help", "show usage help");
 
-    double size{0.0};
-    app.add_option("--size", size, "threshold to span (copy) files [GB]")
+    double size_in_gbs{0.0};
+    app.add_option("--size", size_in_gbs, "threshold to span (copy) files [GB]")
         ->required()
         ->check(CLI::PositiveNumber);
 
@@ -27,10 +27,6 @@ int main(int argc, char** argv)
         ->required()
         ->check(CLI::ExistingDirectory);
 
-    bool dry_run{false};
-    app.add_flag("--dry-run", dry_run, "print span listings only, do not copy")
-        ->default_str("false");
-
     try
     {
         app.parse(argc, argv);
@@ -40,7 +36,7 @@ int main(int argc, char** argv)
         return app.exit(e);
     }
 
-    spancopy::spanner spanner{size, source, target, dry_run};
+    spancopy::spanner spanner{size_in_gbs, source, target};
     if (!spanner.span())
     {
         return EXIT_FAILURE;
