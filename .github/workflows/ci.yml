@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+    - '**.md'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+    - '**.md'
+
+jobs:
+  ci:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install Dependencies
+      run: |
+        sudo apt install tree g++-mingw-w64-x86-64-win32
+
+    - name: Build (x64-linux)
+      run: |
+        g++ --version
+        cmake -S . -B build
+        cmake --build build
+        make
+        ldd ./build/spancopy
+        ls -Gghl ./build/spancopy
+
+    - name: Build (x86-mingw)
+      env:
+        CXX: x86_64-w64-mingw32-g++-win32
+      run: |
+        x86_64-w64-mingw32-g++-win32 --version
+        cmake -S . -B build
+        cmake --build build
+        make
+        ldd ./build/spancopy
+        ls -Gghl ./build/spancopy
