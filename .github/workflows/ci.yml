@@ -19,7 +19,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        sudo apt install tree g++-mingw-w64-x86-64-win32
+        sudo apt install -y tree g++-mingw-w64
 
     - name: Build (x64-linux)
       run: |
