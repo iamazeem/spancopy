@@ -12,8 +12,8 @@ int main(int argc, char** argv)
 
     app.set_help_flag("--help", "show usage help");
 
-    float size{0.0f};
-    app.add_option("--size", size, "threshold in GBs to span (copy) files")
+    double size{0.0};
+    app.add_option("--size", size, "threshold to span (copy) files [GB]")
         ->required()
         ->check(CLI::PositiveNumber);
 
@@ -40,14 +40,8 @@ int main(int argc, char** argv)
         return app.exit(e);
     }
 
-    if (source == target)
-    {
-        std::cerr << "[ERR] source and target must not be the same!";
-        return EXIT_FAILURE;
-    }
-
-    spancopy::spanner spanner;
-    if (!spanner.span(size, source, target, dry_run))
+    spancopy::spanner spanner{size, source, target, dry_run};
+    if (!spanner.span())
     {
         return EXIT_FAILURE;
     }
