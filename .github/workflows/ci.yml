@@ -28,9 +28,25 @@ jobs:
         cmake --build build
         ls -Gghl ./build/spancopy
 
+    - name: Upload (spancopy - x64-linux)
+      uses: actions/upload-artifact@v3
+      with:
+        name: spancopy-x64-linux
+        path: ./build/spancopy
+        retention-days: 5
+        if-no-files-found: error
+
     - name: Build (x86-mingw)
       run: |
         rm -rf ./build
         CXX=x86_64-w64-mingw32-g++ cmake -S . -B build
         cmake --build build
         ls -Gghl ./build/spancopy.exe
+
+    - name: Upload (spancopy.exe - x64-mingw)
+      uses: actions/upload-artifact@v3
+      with:
+        name: spancopy-x64-mingw.exe
+        path: ./build/spancopy.exe
+        retention-days: 5
+        if-no-files-found: error
