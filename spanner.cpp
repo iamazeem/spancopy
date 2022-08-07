@@ -56,7 +56,7 @@ bool spanner::span() const noexcept
     }
 
     const auto target_root_dir_path = m_target / get_target_root_dir_name();
-    std::cout << "[INF] target root directory: [" << target_root_dir_path << "]\n";
+    std::cout << "[INF] target root directory: [" << target_root_dir_path.generic_string() << "]\n";
     if (fs::exists(target_root_dir_path))
     {
         std::cerr << "[ERR] target directory already exists! [" << target_root_dir_path << "]\n";
@@ -94,7 +94,7 @@ bool spanner::span() const noexcept
 
         target_subdir_size += source_file_size;
 
-        std::cout << "[INF] copying [" << source_file_path << "] ("
+        std::cout << "[INF] copying [" << source_file_path.generic_string() << "] ("
                   << source_file_size << ") >> "
                   << "[" << target_file_path << "] ("
                   << target_subdir_size << ")\n";
