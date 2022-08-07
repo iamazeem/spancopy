@@ -26,15 +26,10 @@ jobs:
         g++ --version
         cmake -S . -B build
         cmake --build build
-        ldd ./build/spancopy
         ls -Gghl ./build/spancopy
 
     - name: Build (x86-mingw)
-      env:
-        CXX: x86_64-w64-mingw32-g++-win32
       run: |
-        x86_64-w64-mingw32-g++-win32 --version
-        cmake -S . -B build
+        CXX=x86_64-w64-mingw32-g++ cmake -S . -B build
         cmake --build build
-        ldd ./build/spancopy
-        ls -Gghl ./build/spancopy
+        ls -Gghl ./build/spancopy.exe
