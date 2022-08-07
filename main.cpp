@@ -7,10 +7,10 @@ int main(int argc, char** argv)
     CLI::App app{"spancopy - utility to span (copy) files into subdirectories"};
     app.allow_windows_style_options();
 
-    app.set_help_flag("--help", "show usage help");
+    app.set_help_flag("--help", "show usage info");
 
     double size_in_gbs{0.0};
-    app.add_option("--size", size_in_gbs, "threshold to span (copy) files [GB]")
+    app.add_option("--size", size_in_gbs, "threshold in GBs")
         ->required()
         ->check(CLI::PositiveNumber);
 
