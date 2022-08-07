@@ -2,9 +2,6 @@
 #include <CLI11.hpp>
 #include "spanner.hpp"
 
-#include <filesystem>
-namespace fs = std::filesystem;
-
 int main(int argc, char** argv)
 {
     CLI::App app{"spancopy - utility to span (copy) files into subdirectories"};
