@@ -26,7 +26,6 @@ jobs:
         g++ --version
         cmake -S . -B build
         cmake --build build
-        make
         ldd ./build/spancopy
         ls -Gghl ./build/spancopy
 
@@ -37,6 +36,5 @@ jobs:
         x86_64-w64-mingw32-g++-win32 --version
         cmake -S . -B build
         cmake --build build
-        make
         ldd ./build/spancopy
         ls -Gghl ./build/spancopy
