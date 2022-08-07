@@ -9,8 +9,8 @@ int main(int argc, char** argv)
 
     app.set_help_flag("--help", "show usage info");
 
-    double size_in_gbs{0.0};
-    app.add_option("--size", size_in_gbs, "threshold in GBs")
+    double size{0.0};
+    app.add_option("--size", size, "threshold in GBs")
         ->required()
         ->check(CLI::PositiveNumber);
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
         return app.exit(e);
     }
 
-    spancopy::spanner spanner{size_in_gbs, source, target};
+    spancopy::spanner spanner{size, source, target};
     if (!spanner.span())
     {
         return EXIT_FAILURE;

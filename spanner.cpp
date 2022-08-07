@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iomanip>
 #include <sstream>
 #include <chrono>
 #include <ctime>
@@ -91,7 +90,7 @@ bool spanner::span() const noexcept
         const auto target_subdir_root_path_str = target_subdir_root_path.generic_string();
         const auto target_file_path = fs::path{target_subdir_root_path_str + relative_source_file_path_str};
         fs::create_directories(target_file_path.parent_path());
-        fs::copy(source_file_path, target_file_path, fs::copy_options::overwrite_existing);
+        fs::copy(source_file_path, target_file_path);
 
         target_subdir_size += source_file_size;
 
