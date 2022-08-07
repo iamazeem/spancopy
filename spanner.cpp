@@ -18,9 +18,10 @@ spanner::spanner(const double size_in_gbs, const fs::path source, const fs::path
 
 bool spanner::span() const noexcept
 {
-    std::cout << "[INF] source: " << m_source << '\n';
-    std::cout << "[INF] target: " << m_target << '\n';
+    std::cout << "[INF] source: [" << m_source << "]\n";
+    std::cout << "[INF] target: [" << m_target << "]\n";
 
+    std::size_t source_dir_file_counter{0};
     std::uintmax_t source_dir_size_in_bytes = 0;
     std::map<fs::path, std::uintmax_t> ordered_source_paths;
     for (const auto& entry : fs::recursive_directory_iterator(m_source))
@@ -31,14 +32,22 @@ bool spanner::span() const noexcept
             const auto size = entry.file_size();
             ordered_source_paths.emplace(path, size);
             source_dir_size_in_bytes += size;
+            ++source_dir_file_counter;
         }
     }
 
-    std::cout << "[INF] source directory size: "
-              << source_dir_size_in_bytes << " bytes ["
+    if (source_dir_file_counter == 0)
+    {
+        std::cerr << "[ERR] no source files found!\n";
+        return false;
+    }
+
+    std::cout << "[INF] source directory info: [files: "
+              << source_dir_file_counter << ", size (bytes): "
+              << source_dir_size_in_bytes << ", size (GB): "
               << std::fixed
               << bytes_to_gbs(source_dir_size_in_bytes)
-              << " GB (approx)]\n";
+              << "]\n";
 
     if (!is_space_available(source_dir_size_in_bytes))
     {
@@ -48,7 +57,7 @@ bool spanner::span() const noexcept
     }
 
     const auto target_root_dir_path = m_target / get_target_root_dir_name();
-    std::cout << "[INF] target root directory: " << target_root_dir_path << '\n';
+    std::cout << "[INF] target root directory: [" << target_root_dir_path << "]\n";
     if (fs::exists(target_root_dir_path))
     {
         std::cerr << "[ERR] target directory already exists! [" << target_root_dir_path << "]\n";
