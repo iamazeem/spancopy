@@ -22,31 +22,34 @@ jobs:
         sudo apt install -y tree g++-mingw-w64
 
     - name: Build (x64-linux)
+      env:
+        BUILD_DIR: build-x64-linux
       run: |
-        g++ --version
-        cmake -S . -B build
-        cmake --build build
-        ls -Gghl ./build/spancopy
+        cmake -S . -B $BUILD_DIR
+        cmake --build $BUILD_DIR
+        ls -Gghl ./$BUILD_DIR/spancopy
 
     - name: Upload (spancopy - x64-linux)
       uses: actions/upload-artifact@v3
       with:
         name: spancopy-x64-linux
-        path: ./build/spancopy
+        path: ./build-x64-linux/spancopy
         retention-days: 5
         if-no-files-found: error
 
-    - name: Build (x86-mingw)
+    - name: Build (x64-windows)
+      env:
+        BUILD_DIR: build-x64-windows
       run: |
         rm -rf ./build
-        CXX=x86_64-w64-mingw32-g++ cmake -S . -B build
-        cmake --build build
-        ls -Gghl ./build/spancopy.exe
+        CXX=x86_64-w64-mingw32-g++ cmake -S . -B $BUILD_DIR
+        cmake --build $BUILD_DIR
+        ls -Gghl ./$BUILD_DIR/spancopy.exe
 
-    - name: Upload (spancopy.exe - x64-mingw)
+    - name: Upload (spancopy.exe - x64-windows)
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-x64-mingw.exe
-        path: ./build/spancopy.exe
+        name: spancopy-x64-windows.exe
+        path: ./build-x64-windows/spancopy.exe
         retention-days: 5
         if-no-files-found: error
