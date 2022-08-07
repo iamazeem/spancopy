@@ -1,6 +1,6 @@
 # spancopy
 
-```shell
+```text
 $ spancopy --help
 spancopy - utility to span (copy) files into subdirectories
 Usage: spancopy [OPTIONS]
