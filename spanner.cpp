@@ -21,7 +21,7 @@ bool spanner::span() const noexcept
     std::cout << "[INF] source: [" << m_source.generic_string() << "]\n";
     std::cout << "[INF] target: [" << m_target.generic_string() << "]\n";
 
-    const auto target_root_dir_path = get_target_root_dir_path();
+    const auto target_root_dir_path = generate_target_root_dir_path();
     std::cout << "[INF] target root directory: [" << target_root_dir_path.generic_string() << "]\n";
     remove_target_dir_if_exists(target_root_dir_path);
 
@@ -103,7 +103,7 @@ bool spanner::span() const noexcept
             }
 
             const auto source_file_path = source_parent_path / source_filename;
-            const auto target_file_path = get_target_file_path(source_file_path, target_subdir_root_path);
+            const auto target_file_path = generate_target_file_path(source_file_path, target_subdir_root_path);
             fs::create_directories(target_file_path.parent_path());
             fs::copy(source_file_path, target_file_path);
 
@@ -123,29 +123,13 @@ bool spanner::span() const noexcept
     return true;
 }
 
-fs::path spanner::get_target_root_dir_path() const noexcept
+fs::path spanner::generate_target_root_dir_path() const noexcept
 {
     using namespace std::chrono;
     std::ostringstream oss;
     const auto now = system_clock::to_time_t(system_clock::now());
     oss << std::put_time(std::localtime(&now), "%Y%m%d");
     return m_target / oss.str();
-}
-
-std::uintmax_t spanner::gbs_to_bytes(const double gbs) const noexcept
-{
-    return (gbs * 1024 * 1024 * 1024);
-}
-
-double spanner::bytes_to_gbs(const std::uintmax_t bytes) const noexcept
-{
-    return (bytes / 1024. / 1024. / 1024.);
-}
-
-bool spanner::is_space_available(const std::uintmax_t source_dir_size_in_bytes) const noexcept
-{
-    const auto target_space_info = fs::space(m_target);
-    return (target_space_info.available > source_dir_size_in_bytes);
 }
 
 void spanner::remove_target_dir_if_exists(const fs::path& target_root_dir_path) const noexcept
@@ -162,7 +146,13 @@ void spanner::remove_target_dir_if_exists(const fs::path& target_root_dir_path) 
     }
 }
 
-fs::path spanner::get_target_file_path(const fs::path& source_file_path, const fs::path& target_subdir_root_path) const noexcept
+bool spanner::is_space_available(const std::uintmax_t source_dir_size_in_bytes) const noexcept
+{
+    const auto target_space_info = fs::space(m_target);
+    return (target_space_info.available > source_dir_size_in_bytes);
+}
+
+fs::path spanner::generate_target_file_path(const fs::path& source_file_path, const fs::path& target_subdir_root_path) const noexcept
 {
     static const auto source_root_dir_path_str = m_source.generic_string();
 
@@ -171,6 +161,16 @@ fs::path spanner::get_target_file_path(const fs::path& source_file_path, const f
     const auto target_subdir_root_path_str = target_subdir_root_path.generic_string();
     const auto target_file_path = fs::path{target_subdir_root_path_str + relative_source_file_path_str};
     return target_file_path;
+}
+
+std::uintmax_t spanner::gbs_to_bytes(const double gbs) const noexcept
+{
+    return (gbs * 1024 * 1024 * 1024);
+}
+
+double spanner::bytes_to_gbs(const std::uintmax_t bytes) const noexcept
+{
+    return (bytes / 1024. / 1024. / 1024.);
 }
 
 } // spancopy
