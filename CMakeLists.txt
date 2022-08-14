@@ -8,13 +8,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "-Wall -O3")
 
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/externals
 )
 
 set(SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/spanner.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/spanner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

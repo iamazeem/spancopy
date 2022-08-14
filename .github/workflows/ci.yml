@@ -2,26 +2,34 @@ name: ci
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
     - '**.md'
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
     - '**.md'
 
 jobs:
   ci:
-    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-20.04, macos-10.15]
+
+    runs-on: ${{ matrix.os }}
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
 
     - name: Install Dependencies
+      if: runner.os == 'Linux'
       run: |
         sudo apt install -y tree g++-mingw-w64 g++-aarch64-linux-gnu
 
     - name: Build (x64-linux)
+      if: runner.os == 'Linux'
       env:
         BUILD_DIR: build-x64-linux
       run: |
@@ -31,6 +39,7 @@ jobs:
         ls -Gghl ./$BUILD_DIR/spancopy
 
     - name: Upload (spancopy - x64-linux)
+      if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
         name: spancopy-x64-linux
@@ -39,6 +48,7 @@ jobs:
         if-no-files-found: error
 
     - name: Build (arm64-linux)
+      if: runner.os == 'Linux'
       env:
         BUILD_DIR: build-arm64-linux
       run: |
@@ -48,6 +58,7 @@ jobs:
         ls -Gghl ./$BUILD_DIR/spancopy
 
     - name: Upload (spancopy - arm64-linux)
+      if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
         name: spancopy-arm64-linux
@@ -56,6 +67,7 @@ jobs:
         if-no-files-found: error
 
     - name: Build (x64-windows)
+      if: runner.os == 'Linux'
       env:
         BUILD_DIR: build-x64-windows
       run: |
@@ -66,10 +78,31 @@ jobs:
         ls -Gghl ./$BUILD_DIR/spancopy.exe
 
     - name: Upload (spancopy.exe - x64-windows)
+      if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
         name: spancopy-x64-windows
         path: ./build-x64-windows/spancopy.exe
+        retention-days: 5
+        if-no-files-found: error
+
+    - name: Build (x64-macos)
+      if: runner.os == 'macOS'
+      env:
+        BUILD_DIR: build-x64-macos
+      run: |
+        rm -rf ./build
+        cmake -S . -B $BUILD_DIR
+        cmake --build $BUILD_DIR
+        strip ./$BUILD_DIR/spancopy
+        ls -Gghl ./$BUILD_DIR/spancopy
+
+    - name: Upload (spancopy - x64-macos)
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v3
+      with:
+        name: spancopy-x64-macos
+        path: ./build-x64-macos/spancopy
         retention-days: 5
         if-no-files-found: error
 
@@ -81,3 +114,4 @@ jobs:
           ./build-x64-linux/spancopy
           ./build-arm64-linux/spancopy
           ./build-x64-windows/spancopy.exe
+          ./build-x64-macos/spancopy
