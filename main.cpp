@@ -1,13 +1,18 @@
 #include <cstdlib>
 #include <CLI11.hpp>
+#include "version.hpp"
 #include "spanner.hpp"
 
 int main(int argc, char** argv)
 {
-    CLI::App app{"spancopy - utility to span (copy) files into subdirectories"};
+    const auto exe = fs::path{argv[0]}.filename().string();
+    const auto exe_with_version = exe + ' ' + spancopy::version;
+
+    CLI::App app{exe_with_version + " - utility to span (copy) files into subdirectories"};
     app.allow_windows_style_options();
 
     app.set_help_flag("--help", "show usage info");
+    app.set_version_flag("--version", exe_with_version, "show version");
 
     double size{0.0};
     app.add_option("--size", size, "threshold in GBs")

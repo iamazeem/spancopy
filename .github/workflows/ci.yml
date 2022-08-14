@@ -79,4 +79,5 @@ jobs:
       with:
         files: |
           ./build-x64-linux/spancopy
+          ./build-arm64-linux/spancopy
           ./build-x64-windows/spancopy.exe
