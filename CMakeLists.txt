@@ -18,4 +18,9 @@ set(SOURCES
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} -static)
+
+if(UNIX)
+    target_link_libraries(${PROJECT_NAME} -static)
+else()
+    target_link_libraries(${PROJECT_NAME})
+endif()
