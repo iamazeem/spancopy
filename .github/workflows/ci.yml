@@ -92,7 +92,7 @@ jobs:
         BUILD_DIR: build-x64-macos
       run: |
         rm -rf ./build
-        cmake -S . -B $BUILD_DIR
+        CXX=clang++ cmake -S . -B $BUILD_DIR
         cmake --build $BUILD_DIR
         strip ./$BUILD_DIR/spancopy
         ls -Gghl ./$BUILD_DIR/spancopy
