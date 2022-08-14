@@ -51,7 +51,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: spancopy-arm64-linux
-        path: ./build/build-arm64-linux/spancopy
+        path: ./build-arm64-linux/spancopy
         retention-days: 5
         if-no-files-found: error
 
