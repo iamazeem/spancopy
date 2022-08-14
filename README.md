@@ -3,13 +3,14 @@
 ## Usage
 
 ```text
-$ spancopy --help
-spancopy - utility to span (copy) files into subdirectories
-Usage: spancopy [OPTIONS]
+$ ./spancopy --help
+spancopy v0.0.1 - utility to span (copy) files into subdirectories
+Usage: ./spancopy [OPTIONS]
 
 Options:
-  --help                      show usage help
-  --size FLOAT:POSITIVE REQUIRED
+  --help                      show help
+  --version                   show version
+  --threshold FLOAT:POSITIVE REQUIRED
                               threshold in GBs
   --source TEXT:DIR REQUIRED  source directory
   --target TEXT:DIR REQUIRED  target directory
