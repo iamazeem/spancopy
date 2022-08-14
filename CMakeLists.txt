@@ -19,7 +19,7 @@ set(SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if (APPLE)
     target_link_libraries(${PROJECT_NAME})
 else()
     target_link_libraries(${PROJECT_NAME} -static)
