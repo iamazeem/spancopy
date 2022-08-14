@@ -19,8 +19,8 @@ set(SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-if(UNIX)
-    target_link_libraries(${PROJECT_NAME} -static)
-else()
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(${PROJECT_NAME})
+else()
+    target_link_libraries(${PROJECT_NAME} -static)
 endif()
