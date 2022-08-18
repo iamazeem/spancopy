@@ -10,7 +10,7 @@ Usage: ./spancopy [OPTIONS]
 Options:
   --help                      show help
   --version                   show version
-  --threshold UINT:SIZE [b, kb(=1024b), ...] REQUIRED
+  --threshold UINT:SIZE [b, kb(=1024b), ...]:POSITIVE REQUIRED
                               threshold size
   --source TEXT:DIR REQUIRED  source directory
   --target TEXT:DIR REQUIRED  target directory

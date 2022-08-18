@@ -18,7 +18,8 @@ std::optional<configuration> load(int argc, char** argv) noexcept
     std::uintmax_t threshold{};
     app.add_option("--threshold", threshold, "threshold size")
         ->required()
-        ->check(CLI::AsSizeValue{false});
+        ->transform(CLI::AsSizeValue{false})
+        ->check(CLI::PositiveNumber);
 
     fs::path source;
     app.add_option("--source", source, "source directory")

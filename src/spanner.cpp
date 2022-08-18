@@ -16,8 +16,9 @@ spanner::spanner(const configuration& configuration) noexcept
 
 bool spanner::span() const noexcept
 {
-    std::cout << "[INF] source: [" << m_configuration.source().generic_string() << "]\n";
-    std::cout << "[INF] target: [" << m_configuration.target().generic_string() << "]\n";
+    std::cout << "[INF] threshold: [" << m_configuration.threshold() << " bytes]\n";
+    std::cout << "[INF] source:    [" << m_configuration.source().generic_string() << "]\n";
+    std::cout << "[INF] target:    [" << m_configuration.target().generic_string() << "]\n";
 
     const auto target_root_dir_path = generate_target_root_dir_path();
     std::cout << "[INF] target root directory: [" << target_root_dir_path.generic_string() << "]\n";
@@ -80,8 +81,8 @@ bool spanner::span() const noexcept
     }
 
     std::cout << "[INF] source directory info: [files: "
-              << source_file_count << ", size (bytes): "
-              << source_dir_size << "]\n";
+              << source_file_count << ", size: "
+              << source_dir_size << " bytes]\n";
 
     if (!is_target_space_available(source_dir_size))
     {
