@@ -29,8 +29,8 @@ bool spanner::span() const noexcept
     // { key: parent path, value: { filename, size } } (sorted parent paths)
     using source_file_mapping_t = std::map<fs::path, source_file_info_t>;
 
-    std::size_t invalid_source_file_counter{0};
-    std::size_t source_file_counter{0};
+    std::size_t invalid_source_file_count{0};
+    std::size_t source_file_count{0};
     std::uintmax_t source_dir_size{0};
     source_file_mapping_t source_file_mapping;
     for (const auto& entry : fs::recursive_directory_iterator(m_configuration.source()))
@@ -43,11 +43,11 @@ bool spanner::span() const noexcept
             if (size > m_configuration.threshold())
             {
                 std::cerr << "[ERR] file cannot be spanned! [" << path.generic_string() << "] (" << size << ")\n";
-                ++invalid_source_file_counter;
+                ++invalid_source_file_count;
             }
 
             source_dir_size += size;
-            ++source_file_counter;
+            ++source_file_count;
 
             if (auto it = source_file_mapping.find(path.parent_path());
                 (it == source_file_mapping.end()))
@@ -65,22 +65,22 @@ bool spanner::span() const noexcept
         }
     }
 
-    if (source_file_counter == 0)
+    if (source_file_count == 0)
     {
         std::cerr << "[ERR] no source files found to copy!\n";
         return false;
     }
 
-    if (invalid_source_file_counter > 0)
+    if (invalid_source_file_count > 0)
     {
         std::cerr << "[ERR] file sizes must be less than or equal to threshold!\n";
-        std::cerr << "[ERR] summary: " << invalid_source_file_counter << " out of "
-                  << source_file_counter << " files cannot be spanned!\n";
+        std::cerr << "[ERR] summary: " << invalid_source_file_count << " out of "
+                  << source_file_count << " files cannot be spanned!\n";
         return false;
     }
 
     std::cout << "[INF] source directory info: [files: "
-              << source_file_counter << ", size (bytes): "
+              << source_file_count << ", size (bytes): "
               << source_dir_size << "]\n";
 
     if (!is_target_space_available(source_dir_size))
@@ -90,7 +90,7 @@ bool spanner::span() const noexcept
         return false;
     }
 
-    std::size_t target_subdir_counter{1};
+    std::size_t target_subdir_count{1};
     std::uintmax_t target_subdir_size{0};
     fs::path target_subdir_root_path;
     for (const auto& [source_parent_path, source_file_info] : source_file_mapping)
@@ -100,12 +100,12 @@ bool spanner::span() const noexcept
             if ((target_subdir_size + source_file_size) > m_configuration.threshold())
             {
                 target_subdir_size = 0;
-                ++target_subdir_counter;
+                ++target_subdir_count;
             }
 
             if (target_subdir_size == 0)
             {
-                const auto subdir_name = std::to_string(target_subdir_counter);
+                const auto subdir_name = std::to_string(target_subdir_count);
                 target_subdir_root_path = target_root_dir_path / subdir_name;
             }
 
@@ -123,8 +123,8 @@ bool spanner::span() const noexcept
         }
     }
 
-    std::cout << "[INF] summary: total " << source_file_counter << " files spanned over "
-              << target_subdir_counter << " subdirectories\n";
+    std::cout << "[INF] summary: total " << source_file_count << " files spanned over "
+              << target_subdir_count << " subdirectories\n";
 
     std::cout << "[INF] --- [DONE] ---\n";
     return true;
