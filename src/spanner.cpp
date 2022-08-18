@@ -29,6 +29,7 @@ bool spanner::span() const noexcept
     // { key: parent path, value: { filename, size } } (sorted parent paths)
     using source_file_mapping_t = std::map<fs::path, source_file_info_t>;
 
+    std::size_t invalid_source_file_counter{0};
     std::size_t source_file_counter{0};
     std::uintmax_t source_dir_size{0};
     source_file_mapping_t source_file_mapping;
@@ -38,8 +39,14 @@ bool spanner::span() const noexcept
         {
             const auto path = entry.path();
             const auto size = entry.file_size();
-            source_dir_size += size;
 
+            if (size > m_configuration.threshold())
+            {
+                std::cerr << "[ERR] file cannot be spanned! [" << path.generic_string() << "] (" << size << ")\n";
+                ++invalid_source_file_counter;
+            }
+
+            source_dir_size += size;
             ++source_file_counter;
 
             if (auto it = source_file_mapping.find(path.parent_path());
@@ -61,6 +68,14 @@ bool spanner::span() const noexcept
     if (source_file_counter == 0)
     {
         std::cerr << "[ERR] no source files found to copy!\n";
+        return false;
+    }
+
+    if (invalid_source_file_counter > 0)
+    {
+        std::cerr << "[ERR] file sizes must be less than or equal to threshold!\n";
+        std::cerr << "[ERR] summary: " << invalid_source_file_counter << " out of "
+                  << source_file_counter << " files cannot be spanned!\n";
         return false;
     }
 
