@@ -10,6 +10,11 @@ std::optional<config> load(int argc, char** argv) noexcept
     const auto exe_with_version = exe + ' ' + spancopy::version;
 
     CLI::App app{exe_with_version + " - utility to span (copy) files into subdirectories"};
+    app.footer(
+        "Author: AZEEM SAJID <azeem.sajid@gmail.com>\n"
+        "GitHub: https://github.com/iamazeem/spancopy\n"
+    );
+
     app.allow_windows_style_options();
 
     app.set_help_flag("--help", "show help");
