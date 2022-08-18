@@ -4,7 +4,7 @@
 
 namespace spancopy::cli {
 
-std::optional<configuration> load(int argc, char** argv) noexcept
+std::optional<config> load(int argc, char** argv) noexcept
 {
     const auto exe = fs::path{argv[0]}.filename().string();
     const auto exe_with_version = exe + ' ' + spancopy::version;
@@ -41,7 +41,7 @@ std::optional<configuration> load(int argc, char** argv) noexcept
         return std::nullopt;
     }
 
-    return configuration
+    return config
     {
         threshold,
         source,

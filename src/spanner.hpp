@@ -1,13 +1,13 @@
 #pragma once
 
-#include "configuration.hpp"
+#include "config.hpp"
 
 namespace spancopy {
 
 class spanner final
 {
 public:
-    spanner(const configuration& configuration) noexcept;
+    spanner(const config& config) noexcept;
     bool span() const noexcept;
 
 private:
@@ -18,7 +18,7 @@ private:
         const fs::path& source_file_path,
         const fs::path& target_subdir_root_path) const noexcept;
 
-    const configuration m_configuration;
+    const config m_config;
 };
 
 } // spancopy

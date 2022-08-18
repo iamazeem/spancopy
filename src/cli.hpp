@@ -1,10 +1,10 @@
 #pragma once
 
 #include <optional>
-#include "configuration.hpp"
+#include "config.hpp"
 
 namespace spancopy::cli {
 
-std::optional<configuration> load(int argc, char** argv) noexcept;
+std::optional<config> load(int argc, char** argv) noexcept;
 
 } // spancopy

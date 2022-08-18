@@ -8,17 +8,17 @@
 
 namespace spancopy {
 
-spanner::spanner(const configuration& configuration) noexcept
+spanner::spanner(const config& config) noexcept
     :
-    m_configuration{configuration}
+    m_config{config}
 {
 }
 
 bool spanner::span() const noexcept
 {
-    std::cout << "[INF] threshold: [" << m_configuration.threshold() << " bytes]\n";
-    std::cout << "[INF] source:    [" << m_configuration.source().generic_string() << "]\n";
-    std::cout << "[INF] target:    [" << m_configuration.target().generic_string() << "]\n";
+    std::cout << "[INF] threshold: [" << m_config.threshold() << " bytes]\n";
+    std::cout << "[INF] source:    [" << m_config.source().generic_string() << "]\n";
+    std::cout << "[INF] target:    [" << m_config.target().generic_string() << "]\n";
 
     const auto target_root_dir_path = generate_target_root_dir_path();
     std::cout << "[INF] target root directory: [" << target_root_dir_path.generic_string() << "]\n";
@@ -34,14 +34,14 @@ bool spanner::span() const noexcept
     std::size_t source_file_count{0};
     std::uintmax_t source_dir_size{0};
     source_file_mapping_t source_file_mapping;
-    for (const auto& entry : fs::recursive_directory_iterator(m_configuration.source()))
+    for (const auto& entry : fs::recursive_directory_iterator(m_config.source()))
     {
         if (entry.is_regular_file())
         {
             const auto path = entry.path();
             const auto size = entry.file_size();
 
-            if (size > m_configuration.threshold())
+            if (size > m_config.threshold())
             {
                 std::cerr << "[ERR] file cannot be spanned! [" << path.generic_string() << "] (" << size << ")\n";
                 ++invalid_source_file_count;
@@ -98,7 +98,7 @@ bool spanner::span() const noexcept
     {
         for (const auto& [source_filename, source_file_size] : source_file_info)
         {
-            if ((target_subdir_size + source_file_size) > m_configuration.threshold())
+            if ((target_subdir_size + source_file_size) > m_config.threshold())
             {
                 target_subdir_size = 0;
                 ++target_subdir_count;
@@ -137,12 +137,12 @@ fs::path spanner::generate_target_root_dir_path() const noexcept
     std::ostringstream oss;
     const auto now = system_clock::to_time_t(system_clock::now());
     oss << std::put_time(std::localtime(&now), "%Y%m%d");
-    return m_configuration.target() / oss.str();
+    return m_config.target() / oss.str();
 }
 
 bool spanner::is_target_space_available(const std::uintmax_t bytes) const noexcept
 {
-    return (fs::space(m_configuration.target()).available > bytes);
+    return (fs::space(m_config.target()).available > bytes);
 }
 
 void spanner::remove_target_dir_if_exists(const fs::path& target_root_dir_path) const noexcept
@@ -163,7 +163,7 @@ fs::path spanner::generate_target_file_path(
     const fs::path& source_file_path,
     const fs::path& target_subdir_root_path) const noexcept
 {
-    static const auto source_root_dir_path_str = m_configuration.source().generic_string();
+    static const auto source_root_dir_path_str = m_config.source().generic_string();
     const auto source_file_path_str = source_file_path.generic_string();
     const auto relative_source_file_path_str = source_file_path_str.substr(source_root_dir_path_str.length());
     const auto target_subdir_root_path_str = target_subdir_root_path.generic_string();
