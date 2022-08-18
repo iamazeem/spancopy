@@ -1,7 +1,6 @@
 #include <iostream>
 #include <sstream>
 #include <chrono>
-#include <thread>
 #include <ctime>
 #include <map>
 #include "spanner.hpp"
@@ -12,14 +11,13 @@ spanner::spanner(const config& config) noexcept
     :
     m_config{config}
 {
+    std::cout << "[INF] threshold: [" << m_config.threshold() << " bytes]\n"
+              << "[INF] source:    [" << m_config.source().generic_string() << "]\n"
+              << "[INF] target:    [" << m_config.target().generic_string() << "]\n";
 }
 
 bool spanner::span() const noexcept
 {
-    std::cout << "[INF] threshold: [" << m_config.threshold() << " bytes]\n";
-    std::cout << "[INF] source:    [" << m_config.source().generic_string() << "]\n";
-    std::cout << "[INF] target:    [" << m_config.target().generic_string() << "]\n";
-
     const auto target_root_dir_path = generate_target_root_dir_path();
     std::cout << "[INF] target root directory: [" << target_root_dir_path.generic_string() << "]\n";
     remove_target_dir_if_exists(target_root_dir_path);
@@ -74,15 +72,14 @@ bool spanner::span() const noexcept
 
     if (invalid_source_file_count > 0)
     {
-        std::cerr << "[ERR] file sizes must be less than or equal to threshold!\n";
-        std::cerr << "[ERR] summary: " << invalid_source_file_count << " out of "
+        std::cerr << "[ERR] file sizes must be less than or equal to threshold!\n"
+                  << "[ERR] summary: " << invalid_source_file_count << " out of "
                   << source_file_count << " files cannot be spanned!\n";
         return false;
     }
 
-    std::cout << "[INF] source directory info: [files: "
-              << source_file_count << ", size: "
-              << source_dir_size << " bytes]\n";
+    std::cout << "[INF] source directory info: [files: " << source_file_count
+              << ", size: " << source_dir_size << " bytes]\n";
 
     if (!is_target_space_available(source_dir_size))
     {
@@ -118,9 +115,9 @@ bool spanner::span() const noexcept
             target_subdir_size += source_file_size;
 
             std::cout << "[INF] copying [" << source_file_path.generic_string() << "] ("
-                    << source_file_size << ") >> "
-                    << "[" << target_file_path.generic_string() << "] ("
-                    << target_subdir_size << ")\n";
+                      << source_file_size << ") >> "
+                      << "[" << target_file_path.generic_string() << "] ("
+                      << target_subdir_size << ")\n";
         }
     }
 
