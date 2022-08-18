@@ -115,11 +115,6 @@ bool spanner::span() const noexcept
     return true;
 }
 
-bool spanner::is_target_space_available(const std::uintmax_t bytes) const noexcept
-{
-    return (fs::space(m_configuration.target()).available > bytes);
-}
-
 fs::path spanner::generate_target_root_dir_path() const noexcept
 {
     using namespace std::chrono;
@@ -129,17 +124,22 @@ fs::path spanner::generate_target_root_dir_path() const noexcept
     return m_configuration.target() / oss.str();
 }
 
+bool spanner::is_target_space_available(const std::uintmax_t bytes) const noexcept
+{
+    return (fs::space(m_configuration.target()).available > bytes);
+}
+
 void spanner::remove_target_dir_if_exists(const fs::path& target_root_dir_path) const noexcept
 {
     if (fs::exists(target_root_dir_path))
     {
-        std::cerr << "[WRN] target root directory exists! [" << target_root_dir_path.generic_string() << "]\n";
+        std::cout << "[WRN] target root directory exists! [" << target_root_dir_path.generic_string() << "]\n";
         for (const auto& entry : fs::directory_iterator{target_root_dir_path})
         {
             fs::remove_all(entry.path());
         }
         fs::remove(target_root_dir_path);
-        std::cerr << "[WRN] target root directory removed! [" << target_root_dir_path.generic_string() << "]\n";
+        std::cout << "[WRN] target root directory removed! [" << target_root_dir_path.generic_string() << "]\n";
     }
 }
 

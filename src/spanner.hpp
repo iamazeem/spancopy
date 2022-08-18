@@ -11,8 +11,8 @@ public:
     bool span() const noexcept;
 
 private:
-    bool is_target_space_available(const std::uintmax_t source_dir_size) const noexcept;
     fs::path generate_target_root_dir_path() const noexcept;
+    bool is_target_space_available(const std::uintmax_t source_dir_size) const noexcept;
     void remove_target_dir_if_exists(const fs::path& target_root_dir_path) const noexcept;
     fs::path generate_target_file_path(
         const fs::path& source_file_path,
