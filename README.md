@@ -10,8 +10,8 @@ Usage: ./spancopy [OPTIONS]
 Options:
   --help                      show help
   --version                   show version
-  --threshold FLOAT:POSITIVE REQUIRED
-                              threshold in GBs
+  --threshold UINT:SIZE [b, kb(=1024b), ...] REQUIRED
+                              threshold size
   --source TEXT:DIR REQUIRED  source directory
   --target TEXT:DIR REQUIRED  target directory
 ```

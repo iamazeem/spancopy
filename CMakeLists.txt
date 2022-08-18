@@ -15,7 +15,6 @@ include_directories(
 set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/configuration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cli.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spanner.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 )

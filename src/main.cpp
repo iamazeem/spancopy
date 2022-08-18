@@ -10,7 +10,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    spancopy::spanner spanner{*configuration};
+    const auto spanner = spancopy::spanner{*configuration};
     if (!spanner.span())
     {
         return EXIT_FAILURE;

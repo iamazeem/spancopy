@@ -5,7 +5,6 @@
 #include <ctime>
 #include <map>
 #include "spanner.hpp"
-#include "utils.hpp"
 
 namespace spancopy {
 
@@ -31,7 +30,7 @@ bool spanner::span() const noexcept
     using source_file_mapping_t = std::map<fs::path, source_file_info_t>;
 
     std::size_t source_file_counter{0};
-    std::uintmax_t source_dir_size_in_bytes{0};
+    std::uintmax_t source_dir_size{0};
     source_file_mapping_t source_file_mapping;
     for (const auto& entry : fs::recursive_directory_iterator(m_configuration.source()))
     {
@@ -39,7 +38,7 @@ bool spanner::span() const noexcept
         {
             const auto path = entry.path();
             const auto size = entry.file_size();
-            source_dir_size_in_bytes += size;
+            source_dir_size += size;
 
             ++source_file_counter;
 
@@ -67,20 +66,14 @@ bool spanner::span() const noexcept
 
     std::cout << "[INF] source directory info: [files: "
               << source_file_counter << ", size (bytes): "
-              << source_dir_size_in_bytes << ", size (GB): "
-              << std::fixed
-              << utils::bytes_to_gbs(source_dir_size_in_bytes)
-              << "]\n";
+              << source_dir_size << "]\n";
 
-    if (!utils::is_space_available(m_configuration.target(), source_dir_size_in_bytes))
+    if (!is_target_space_available(source_dir_size))
     {
         std::cerr << "[ERR] required space not available! ["
-                  << source_dir_size_in_bytes << " bytes]\n";
+                  << source_dir_size << " bytes]\n";
         return false;
     }
-
-    // const auto threshold_in_bytes = utils::gbs_to_bytes(m_configuration.threshold());
-    const auto threshold_in_bytes = m_configuration.threshold();
 
     std::size_t target_subdir_counter{1};
     std::uintmax_t target_subdir_size{0};
@@ -89,7 +82,7 @@ bool spanner::span() const noexcept
     {
         for (const auto& [source_filename, source_file_size] : source_file_info)
         {
-            if ((target_subdir_size + source_file_size) > threshold_in_bytes)
+            if ((target_subdir_size + source_file_size) > m_configuration.threshold())
             {
                 target_subdir_size = 0;
                 ++target_subdir_counter;
@@ -120,6 +113,11 @@ bool spanner::span() const noexcept
 
     std::cout << "[INF] --- [DONE] ---\n";
     return true;
+}
+
+bool spanner::is_target_space_available(const std::uintmax_t bytes) const noexcept
+{
+    return (fs::space(m_configuration.target()).available > bytes);
 }
 
 fs::path spanner::generate_target_root_dir_path() const noexcept

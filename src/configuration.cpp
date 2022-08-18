@@ -3,7 +3,7 @@
 namespace spancopy {
 
 configuration::configuration(
-    const double threshold,
+    const std::uintmax_t threshold,
     const fs::path source,
     const fs::path target) noexcept
     :
@@ -13,7 +13,7 @@ configuration::configuration(
 {
 }
 
-double configuration::threshold() const noexcept
+std::uintmax_t configuration::threshold() const noexcept
 {
     return m_threshold;
 }

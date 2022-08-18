@@ -15,10 +15,10 @@ std::optional<configuration> load(int argc, char** argv) noexcept
     app.set_help_flag("--help", "show help");
     app.set_version_flag("--version", exe_with_version, "show version");
 
-    double threshold{0.0};
-    app.add_option("--threshold", threshold, "threshold in GBs")
+    std::uintmax_t threshold{};
+    app.add_option("--threshold", threshold, "threshold size")
         ->required()
-        ->check(CLI::PositiveNumber);
+        ->check(CLI::AsSizeValue{false});
 
     fs::path source;
     app.add_option("--source", source, "source directory")

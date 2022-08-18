@@ -9,16 +9,16 @@ class configuration final
 {
 public:
     configuration(
-        const double threshold,
+        const std::uintmax_t threshold,
         const fs::path source,
         const fs::path target) noexcept;
 
-    double threshold() const noexcept;
+    std::uintmax_t threshold() const noexcept;
     fs::path source() const noexcept;
     fs::path target() const noexcept;
 
 private:
-    const double m_threshold{0.0};
+    const std::uintmax_t m_threshold{};
     const fs::path m_source;
     const fs::path m_target;
 };
