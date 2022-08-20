@@ -7,9 +7,9 @@ namespace spancopy::cli {
 std::optional<config> load(int argc, char** argv) noexcept
 {
     const auto exe = fs::path{argv[0]}.filename().string();
-    const auto exe_with_version = exe + ' ' + spancopy::version;
+    const auto exe_with_version = exe + ' ' + VERSION;
 
-    CLI::App app{exe_with_version + " - utility to span (copy) files into subdirectories"};
+    CLI::App app{exe_with_version + " - span and copy files into subdirectories per threshold"};
     app.footer(
         "Author: AZEEM SAJID <azeem.sajid@gmail.com>\n"
         "GitHub: https://github.com/iamazeem/spancopy\n"
@@ -54,4 +54,4 @@ std::optional<config> load(int argc, char** argv) noexcept
     };
 }
 
-} // spancopy
+} // spancopy::cli

@@ -4,14 +4,11 @@
 
 int main(int argc, char** argv)
 {
-    const auto config = spancopy::cli::load(argc, argv);
-    if (!config)
+    if (const auto config = spancopy::cli::load(argc, argv); !config)
     {
         return EXIT_FAILURE;
     }
-
-    const auto spanner = spancopy::spanner{*config};
-    if (!spanner.span())
+    else if (const auto spanner = spancopy::spanner{*config}; !spanner.span())
     {
         return EXIT_FAILURE;
     }

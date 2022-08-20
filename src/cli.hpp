@@ -7,4 +7,4 @@ namespace spancopy::cli {
 
 std::optional<config> load(int argc, char** argv) noexcept;
 
-} // spancopy
+} // spancopy::cli
