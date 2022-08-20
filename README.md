@@ -13,8 +13,8 @@ under the `target` directory to avoid conflicts. The first subdirectory name is
 into it, reaches the threshold value, a new subdirectory with an incremented
 name is created i.e. `2` and so on until all the files have been copied.
 
-All files in the `source` directory should be less or equal to the `threshold`
-value, otherwise an error is issued.
+The sizes of all the source files must be less or equal to the `threshold`
+value.
 
 There must be enough space at `target` for the `source` files to be copied
 successfully.
