@@ -11,7 +11,7 @@ subdirectories under the `target` directory. A main subdirectory is created
 under the `target` directory to avoid conflicts. The first subdirectory name is
 `1`. If the total size of the subdirectory i.e. the size of the files copied
 into it, reaches the threshold value, a new subdirectory with an incremented
-name is created i.e. `2` and so on until all the files have been copied.
+name is created i.e. `2` and so on until all the files are copied.
 
 The sizes of all the source files must be less or equal to the `threshold`
 value.
@@ -20,6 +20,12 @@ There must be enough space at `target` for the `source` files to be copied
 successfully.
 
 **NOTE**: Only files are copied. Empty directories are ignored.
+
+Supports:
+
+- Linux (AMD64 and ARM64)
+- macOS
+- Windows
 
 ## Download
 
@@ -31,7 +37,7 @@ Download the prebuilt binaries from the
 ```text
 $ ./spancopy --help
 spancopy v0.0.1 - CLI tool to copy files from source to target per threshold
-Usage: ./spancopy [OPTIONS]
+Usage: ./build/spancopy [OPTIONS]
 
 Options:
   --help                      show help
@@ -40,12 +46,25 @@ Options:
                               threshold size
   --source TEXT:DIR REQUIRED  source directory
   --target TEXT:DIR REQUIRED  target directory
+
+Notes:
+- The `threshold` unit may be bytes, KB, MB, GB, etc.
+- The `threshold` must be less or equal to all source files' sizes.
+- A main subdirectory under `target` is created to avoid conflicts.
+    Format:  YYYYMMDDTHHMMSSMS
+    Example: 20220820T170159946
+- The `target` directory tree is removed if it exists already.
+- On all platforms, the `/` is used as the path separator.
+
+Examples:
+  # With Linux style options
+  spancopy --threshold 500mb --source <source> --target <target>
+
+  # With Windows style options
+  spancopy /threshold 100kb /source <source> /target <target>
 ```
 
-- The `threshold` can be in bytes, KB, MB, GB, etc.
-- The `target` directory is removed before copying.
-
-Example:
+Here's a complete example:
 
 Here's a `source` directory tree (files sizes are in bytes for simplicity):
 
@@ -108,10 +127,6 @@ target/20220820T170146582/
 
 13 directories, 10 files
 ```
-
-Note that a main subdirectory with naming format as `20220820T170146582` is
-created under the `target` directory. All the subdirectories with incremented
-suffixes are created under this main directory.
 
 ## Build
 

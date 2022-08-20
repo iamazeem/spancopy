@@ -12,10 +12,12 @@ std::optional<config> load(int argc, char** argv) noexcept
     CLI::App app{exe_with_version + " - CLI tool to copy files from source to target per threshold"};
     app.footer(
         "Notes:\n"
-        "- The `threshold` must be less or equal to source files' sizes.\n"
+        "- The `threshold` unit may be bytes, KB, MB, GB, etc.\n"
+        "- The `threshold` must be less or equal to all source files' sizes.\n"
         "- A main subdirectory under `target` is created to avoid conflicts.\n"
         "    Format:  YYYYMMDDTHHMMSSMS\n"
         "    Example: 20220820T170159946\n"
+        "- The `target` directory tree is removed if it exists already.\n"
         "- On all platforms, the `/` is used as the path separator.\n"
         "\n"
         "Examples:\n"

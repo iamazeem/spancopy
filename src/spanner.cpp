@@ -125,7 +125,7 @@ std::optional<spanner::source_file_map_t> spanner::generate_source_file_map() co
     if (unspanable_source_file_count > 0)
     {
         std::cerr << "[ERR] file sizes must be less than or equal to threshold!\n"
-                  << "[ERR] summary: " << unspanable_source_file_count << " out of "
+                  << "[ERR] SUMMARY: " << unspanable_source_file_count << " out of "
                   << total_source_file_count << " files cannot be spanned!\n";
         return std::nullopt;
     }
@@ -183,7 +183,7 @@ void spanner::copy_source_to_target(const source_file_map_t& source_file_map) co
         }
     }
 
-    std::cout << "[INF] summary: total " << total_target_file_count << " files spanned over "
+    std::cout << "[INF] SUMMARY: total " << total_target_file_count << " files spanned over "
               << target_subdir_count << " subdirectories\n";
 }
 
