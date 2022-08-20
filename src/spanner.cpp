@@ -54,13 +54,13 @@ void spanner::remove_target_dir_if_exists() const noexcept
         return;
     }
 
-    std::cout << "[WRN] target root directory exists! [" << m_target_root_dir_path.generic_string() << "]\n";
+    std::cout << "[WRN] removing existing target root directory [" << m_target_root_dir_path.generic_string() << "]\n";
     for (const auto& entry : fs::directory_iterator{m_target_root_dir_path})
     {
         fs::remove_all(entry.path());
     }
     fs::remove(m_target_root_dir_path);
-    std::cout << "[WRN] target root directory removed! [" << m_target_root_dir_path.generic_string() << "]\n";
+    std::cout << "[WRN] existing target root directory removed! [" << m_target_root_dir_path.generic_string() << "]\n";
 }
 
 fs::path spanner::generate_target_file_path(
