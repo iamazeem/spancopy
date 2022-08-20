@@ -11,6 +11,23 @@ std::optional<config> load(int argc, char** argv) noexcept
 
     CLI::App app{exe_with_version + " - CLI tool to copy files from source to target per threshold"};
     app.footer(
+        "Notes:\n"
+        "- The `threshold` must be less or equal to source files' sizes.\n"
+        "- A main subdirectory under `target` is created to avoid conflicts.\n"
+        "    Format:  YYYYMMDDTHHMMSSMS\n"
+        "    Example: 20220820T170159946\n"
+        "- On all platforms, the `/` is used as the path separator.\n"
+        "\n"
+        "Examples:\n"
+        "  # With Linux style options\n"
+        "  spancopy --threshold 500mb --source <source> --target <target>\n"
+        "\n"
+        "  # With Windows style options\n"
+        "  spancopy /threshold 100kb /source <source> /target <target>\n"
+        "\n"
+        "For any issues and/or constructive feedback, please contact the\n"
+        "author or open an issue directly on the GitHub repository.\n"
+        "\n"
         "Author: AZEEM SAJID <azeem.sajid@gmail.com>\n"
         "GitHub: https://github.com/iamazeem/spancopy\n"
     );
