@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <chrono>
 #include <ctime>
@@ -37,8 +38,10 @@ fs::path spanner::generate_target_root_dir_path() const noexcept
 {
     using namespace std::chrono;
     std::ostringstream oss;
-    const auto now = system_clock::to_time_t(system_clock::now());
-    oss << std::put_time(std::localtime(&now), "%Y%m%d");
+    const auto now = system_clock::now();
+    const auto now_time_t = system_clock::to_time_t(now);
+    const auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+    oss << std::put_time(std::localtime(&now_time_t), "%Y%m%dT%H%M%S") << ms.count();
     return m_config.target() / oss.str();
 }
 

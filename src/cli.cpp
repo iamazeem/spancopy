@@ -9,7 +9,7 @@ std::optional<config> load(int argc, char** argv) noexcept
     const auto exe = fs::path{argv[0]}.filename().string();
     const auto exe_with_version = exe + ' ' + VERSION;
 
-    CLI::App app{exe_with_version + " - spancopy source files into target subdirectories per threshold"};
+    CLI::App app{exe_with_version + " - CLI tool to copy files from source to target per threshold"};
     app.footer(
         "Author: AZEEM SAJID <azeem.sajid@gmail.com>\n"
         "GitHub: https://github.com/iamazeem/spancopy\n"
