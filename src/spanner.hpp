@@ -30,7 +30,7 @@ private:
     // i.e. { key: filename, value: file size (bytes) }
     using source_file_t = std::map<fs::path, std::uintmax_t>;
 
-    // sorted source file parent paths with per dir files and sizes
+    // sorted source file parent paths with files and their sizes
     // i.e. { key: parent path, value: { filename, file size } }
     using source_file_map_t = std::map<fs::path, source_file_t>;
 

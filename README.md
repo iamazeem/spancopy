@@ -5,19 +5,13 @@
 [![Downloads](https://img.shields.io/github/downloads/iamazeem/spancopy/total?logo=github&style=flat-square)](https://github.com/iamazeem/spancopy/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/iamazeem/spancopy/blob/master/LICENSE)
 
-`spancopy` is a CLI tool that copies files from `source` to `destination`
-directory per `threshold` e.g. KB, MB, etc. The source files are copied to the
-subdirectories under the `destination` directory. A main subdirectory is created
-under the `destination` directory to avoid conflicts. The first subdirectory
-name is `1`. If the total size of the subdirectory i.e. the size of the files
-copied into it, reaches the threshold value, a new subdirectory with an
-incremented name is created i.e. `2` and so on until all the files are copied.
+`spancopy` is a CLI tool to span (copy) files with size threshold from `source`
+to `destination` directory. The source files are spanned over subdirectories
+under the `destination` directory. A main subdirectory is created under the
+`destination` directory to group all the spanned files under their respective
+subdirectories and to avoid conflicts.
 
-The sizes of all the source files must be less or equal to the `threshold`
-value.
-
-There must be enough space at `destination` for the `source` files to be copied
-successfully.
+Pleas refer to the [Usage](#usage) section for more details.
 
 Supported and tested on:
 
@@ -34,39 +28,61 @@ Download the prebuilt binaries from the
 
 ## Usage
 
+Run `spancopy --help` for usage.
+
 ```text
 $ ./spancopy --help
-spancopy v0.0.1 - CLI tool to copy files from source to destination per threshold
-Usage: ./build/spancopy [OPTIONS]
+spancopy v0.0.1 - a CLI tool to span (copy) files with size threshold
+Usage: ./spancopy [OPTIONS]
 
 Options:
-  --help                      show help
-  --version                   show version
-  --threshold UINT:SIZE [b, kb(=1024b), ...]:POSITIVE REQUIRED
-                              threshold size
-  --source TEXT:DIR REQUIRED  source directory
-  --destination TEXT:DIR REQUIRED  destination directory
+  -h,--help                   show help and exit
+  -v,--version                show version and exit
+  -t,--threshold UINT:SIZE [b, kb(=1024b), ...]:POSITIVE REQUIRED
+                              threshold size to span files
+  -s,--source TEXT:DIR REQUIRED
+                              source directory
+  -d,--destination TEXT:DIR REQUIRED
+                              destination directory
 
 Notes:
-- The `threshold` unit may be bytes, KB, MB, GB, etc.
-- The `threshold` must be less or equal to all source files' sizes.
+- On all platforms, the `/` is used as the path separator.
+- Empty directories are ignored.
+- The sizes of all the `source` files must be less than or equal to the
+  `threshold` value. So, choose a `threshold` value accordingly.
+- The `destination` directory must have enough space for all the `source`
+  files to be copied successfully.
+- The contents of the `destination` directory are removed if it's not empty.
 - A main subdirectory under `destination` is created to avoid conflicts.
+  Following naming convention is used for this subdirectory:
     Format:  YYYYMMDDTHHMMSSMS
     Example: 20220820T170159946
-- The `destination` directory tree is removed if it exists already.
-- On all platforms, the `/` is used as the path separator.
+- For each `threshold` reached, the file(s) with their complete paths are
+  copied under their respective subdirectories i.e. 1, 2, 3, and so on.
+  For example, if for a `source` directory with some files, the `threshold`
+  is reached three times then there will three subdirectories e.g.:
+    Main subdir: 20220820T170159946
+    Threshold 1: 20220820T170159946/1/.../<file(s)>
+    Threshold 2: 20220820T170159946/2/.../<file(s)>
+    Threshold 3: 20220820T170159946/3/.../<file(s)>
 
 Examples:
-  # With Linux style options
-  spancopy --threshold 500mb --source <source> --destination <destination>
+  # spancopy from `src` to `dst` with threshold 500 bytes
+  spancopy --threshold 500b --source ./src --destination ./dst
 
-  # With Windows style options
-  spancopy /threshold 100kb /source <source> /destination <destination>
+  # spancopy from `src` to `dst` with threshold 100KB
+  spancopy --threshold 100kb --source ./src --destination ./dst
+
+For any feedback or to report any issues, please open an issue on
+GitHub: https://github.com/iamazeem/spancopy
+
+Written by: AZEEM SAJID <azeem.sajid@gmail.com>
+
 ```
 
-Here's a complete example:
+## Example
 
-Here's a `source` directory tree (files sizes are in bytes for simplicity):
+Here's a `source` directory (file sizes are in bytes for simplicity):
 
 ```shell
 $ tree -hF source/
@@ -89,14 +105,14 @@ source/
 4 directories, 10 files
 ```
 
-In the above directory structure, the maximum size of 100 bytes so the
-`threshold` value must be 100 or above e.g.:
+In the `source` directory, the maximum size is 100 bytes so the `threshold`
+value must at least be 100 e.g.:
 
 ```shell
 ./spancopy --threshold 100 --source ./source --destination ./destination
 ```
 
-Here's the result of running with a `threshold` value of 100 bytes:
+Here's the result:
 
 ```shell
 $ tree -hF destination/20220820T170146582/
@@ -134,8 +150,6 @@ Prerequisites:
 
 - CMake
 - C++17 compiler
-
-Run:
 
 ```shell
 git clone git@github.com:iamazeem/spancopy.git
