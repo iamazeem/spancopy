@@ -13,6 +13,9 @@ on:
     branches: [main]
     types: [published]
 
+permissions:
+  contents: write
+
 jobs:
   version:
     runs-on: ubuntu-20.04
@@ -36,18 +39,17 @@ jobs:
         echo "OLD_TAG: $OLD_TAG"
         NEW_TAG=${{ steps.tag.outputs.tag }}
         echo "NEW_TAG: $NEW_TAG"
-        if [[ $NEW_TAG == $OLD_TAG ]]; then
+        if [[ "$NEW_TAG" == "$OLD_TAG" ]]; then
           echo "Old and new TAG/VERSION are the same! No update required!"
         else
           echo "Updating VERSION in version file [$OLD_TAG => $NEW_TAG]"
           sed -i -e "s|VERSION .*|VERSION \"$NEW_TAG\"|" $VERSION_FILE
           git config --global user.name 'Azeem Sajid'
-          git config --global user.email 'azeem.sajid@gmail.com'
+          git config --global user.email 'iamAzeem@users.noreply.github.com'
           git diff "$VERSION_FILE"
           git add "$VERSION_FILE"
           git commit -m "Automatic version update from $OLD_TAG to $NEW_TAG."
-          git pull origin main
-          git push origin main
+          git push
           echo "Version updated successfully!"
         fi
 
