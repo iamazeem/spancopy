@@ -40,7 +40,7 @@ jobs:
           echo "Old and new TAG/VERSION are the same! No update required!"
         else
           echo "Updating VERSION in version file [$OLD_TAG => $NEW_TAG]"
-          sed -i -e "s|VERSION .*|VERSION \"v$NEW_TAG\"|" $VERSION_FILE
+          sed -i -e "s|VERSION .*|VERSION \"$NEW_TAG\"|" $VERSION_FILE
           git config --local user.name 'Azeem Sajid'
           git config --local user.email 'azeem.sajid@gmail.com'
           git diff $VERSION_FILE
