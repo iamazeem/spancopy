@@ -10,9 +10,6 @@ on:
     paths-ignore:
     - '**.md'
 
-env:
-  TAG: ""
-
 jobs:
   version:
     runs-on: ubuntu-20.04
@@ -93,8 +90,8 @@ jobs:
           echo "$PREFIX_KEY: $PREFIX_VAL"
           echo "$PREFIX_TAR_KEY: $PREFIX_TAR_VAL"
 
-          echo "$PREFIX_KEY: $PREFIX_VAL" >> $GITHUB_ENV
-          echo "$PREFIX_TAR_KEY: $PREFIX_TAR_VAL" >> $GITHUB_ENV
+          echo "$PREFIX_KEY=$PREFIX_VAL" >> $GITHUB_ENV
+          echo "$PREFIX_TAR_KEY=$PREFIX_TAR_VAL" >> $GITHUB_ENV
         done
 
     # --- Build ---
