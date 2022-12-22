@@ -15,19 +15,18 @@ spanner::spanner(
     m_threshold{threshold},
     m_source{source},
     m_destination{destination},
-    m_target_root_dir_path{generate_target_root_dir_path()}
+    m_destination_root_dir_path{generate_destination_root_dir_path()}
 {
-    std::cout
-        << "[INF] threshold:        [" << m_threshold << " bytes]\n"
-        << "[INF] source:           [" << m_source.generic_string() << "]\n"
-        << "[INF] destination:      [" << m_destination.generic_string() << "]\n"
-        << "[INF] destination root: [" << m_target_root_dir_path.generic_string() << "]"
-        << std::endl;
+    std::cout << "[INF] threshold:        [" << m_threshold << " bytes]\n"
+              << "[INF] source:           [" << m_source.generic_string() << "]\n"
+              << "[INF] destination:      [" << m_destination.generic_string() << "]\n"
+              << "[INF] destination root: [" << m_destination_root_dir_path.generic_string() << "]"
+              << std::endl;
 }
 
 bool spanner::span() const noexcept
 {
-    remove_target_dir_if_exists();
+    remove_destination_dir_if_exists();
 
     if (const auto source_file_map = generate_source_file_map(); !source_file_map)
     {
@@ -35,13 +34,13 @@ bool spanner::span() const noexcept
     }
     else
     {
-        copy_source_to_target(*source_file_map);
+        copy_source_to_destination(*source_file_map);
     }
 
     return true;
 }
 
-fs::path spanner::generate_target_root_dir_path() const noexcept
+fs::path spanner::generate_destination_root_dir_path() const noexcept
 {
     using namespace std::chrono;
     std::ostringstream oss;
@@ -52,37 +51,37 @@ fs::path spanner::generate_target_root_dir_path() const noexcept
     return m_destination / oss.str();
 }
 
-bool spanner::is_target_space_available(const std::uintmax_t bytes) const noexcept
+bool spanner::is_destination_space_available(const std::uintmax_t bytes) const noexcept
 {
     return (fs::space(m_destination).available > bytes);
 }
 
-void spanner::remove_target_dir_if_exists() const noexcept
+void spanner::remove_destination_dir_if_exists() const noexcept
 {
-    if (!fs::exists(m_target_root_dir_path))
+    if (!fs::exists(m_destination_root_dir_path))
     {
         return;
     }
 
-    std::cout << "[WRN] removing existing destination root directory [" << m_target_root_dir_path.generic_string() << "]\n";
-    for (const auto& entry : fs::directory_iterator{m_target_root_dir_path})
+    std::cout << "[WRN] removing existing destination root directory [" << m_destination_root_dir_path.generic_string() << "]\n";
+    for (const auto& entry : fs::directory_iterator{m_destination_root_dir_path})
     {
         fs::remove_all(entry.path());
     }
-    fs::remove(m_target_root_dir_path);
-    std::cout << "[WRN] existing destination root directory removed! [" << m_target_root_dir_path.generic_string() << "]\n";
+    fs::remove(m_destination_root_dir_path);
+    std::cout << "[WRN] existing destination root directory removed! [" << m_destination_root_dir_path.generic_string() << "]\n";
 }
 
-fs::path spanner::generate_target_file_path(
+fs::path spanner::generate_destination_file_path(
     const fs::path& source_file_path,
-    const fs::path& target_subdir_root_path) const noexcept
+    const fs::path& destination_subdir_root_path) const noexcept
 {
     const auto source_root_dir_path_str = m_source.generic_string();
     const auto source_file_path_str = source_file_path.generic_string();
     const auto relative_source_file_path_str = source_file_path_str.substr(source_root_dir_path_str.length());
-    const auto target_subdir_root_path_str = target_subdir_root_path.generic_string();
-    const auto target_file_path = fs::path{target_subdir_root_path_str + relative_source_file_path_str};
-    return target_file_path;
+    const auto destination_subdir_root_path_str = destination_subdir_root_path.generic_string();
+    const auto destination_file_path = fs::path{destination_subdir_root_path_str + relative_source_file_path_str};
+    return destination_file_path;
 }
 
 std::optional<spanner::source_file_map_t> spanner::generate_source_file_map() const noexcept
@@ -140,7 +139,7 @@ std::optional<spanner::source_file_map_t> spanner::generate_source_file_map() co
     std::cout << "[INF] source directory info: [files: " << total_source_file_count
               << ", size: " << source_dir_size << " bytes]\n";
 
-    if (!is_target_space_available(source_dir_size))
+    if (!is_destination_space_available(source_dir_size))
     {
         std::cerr << "[ERR] required space not available! ["
                   << source_dir_size << " bytes]\n";
@@ -150,48 +149,48 @@ std::optional<spanner::source_file_map_t> spanner::generate_source_file_map() co
     return source_file_map;
 }
 
-void spanner::copy_source_to_target(const source_file_map_t& source_file_map) const noexcept
+void spanner::copy_source_to_destination(const source_file_map_t& source_file_map) const noexcept
 {
     std::cout << "[INF] copying source files to destination\n";
 
-    std::size_t total_target_file_count{0};
-    std::size_t target_subdir_count{1};
-    std::uintmax_t target_subdir_size{0};
-    fs::path target_subdir_root_path;
+    std::size_t total_destination_file_count{0};
+    std::size_t destination_subdir_count{1};
+    std::uintmax_t destination_subdir_size{0};
+    fs::path destination_subdir_root_path;
     for (const auto& [source_parent_path, source_file] : source_file_map)
     {
         for (const auto& [source_filename, source_file_size] : source_file)
         {
-            if ((target_subdir_size + source_file_size) > m_threshold)
+            if ((destination_subdir_size + source_file_size) > m_threshold)
             {
-                target_subdir_size = 0;
-                ++target_subdir_count;
+                destination_subdir_size = 0;
+                ++destination_subdir_count;
             }
 
-            if (target_subdir_size == 0)
+            if (destination_subdir_size == 0)
             {
-                const auto subdir_name = std::to_string(target_subdir_count);
-                target_subdir_root_path = m_target_root_dir_path / subdir_name;
+                const auto subdir_name = std::to_string(destination_subdir_count);
+                destination_subdir_root_path = m_destination_root_dir_path / subdir_name;
             }
 
             const auto source_file_path = source_parent_path / source_filename;
-            const auto target_file_path = generate_target_file_path(source_file_path, target_subdir_root_path);
-            fs::create_directories(target_file_path.parent_path());
-            fs::copy(source_file_path, target_file_path);
+            const auto destination_file_path = generate_destination_file_path(source_file_path, destination_subdir_root_path);
+            fs::create_directories(destination_file_path.parent_path());
+            fs::copy(source_file_path, destination_file_path);
 
-            target_subdir_size += source_file_size;
-            ++total_target_file_count;
+            destination_subdir_size += source_file_size;
+            ++total_destination_file_count;
 
-            std::cout << "[INF] copying file # " << total_target_file_count << ' '
+            std::cout << "[INF] copying file # " << total_destination_file_count << ' '
                       << "[" << source_file_path.generic_string() << "] ("
                       << source_file_size << ") => "
-                      << "[" << target_file_path.generic_string() << "] ("
-                      << target_subdir_size << ")\n";
+                      << "[" << destination_file_path.generic_string() << "] ("
+                      << destination_subdir_size << ")\n";
         }
     }
 
-    std::cout << "[INF] SUMMARY: total " << total_target_file_count << " files spanned over "
-              << target_subdir_count << " subdirectories\n";
+    std::cout << "[INF] SUMMARY: total " << total_destination_file_count << " files spanned over "
+              << destination_subdir_count << " subdirectories\n";
 }
 
 } // spancopy
