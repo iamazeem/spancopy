@@ -14,21 +14,12 @@ env:
   TAG: ""
 
 jobs:
-  update-version:
+  version:
     runs-on: ubuntu-20.04
-
-    env:
-      VERSION_FILE: ./src/version.hpp
 
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-
-    - name: Fetch VERSION from version file and set TAG env var
-      run: |
-        TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '\n')
-        echo "TAG: $TAG"
-        echo "TAG=$TAG" >> $GITHUB_ENV
 
     - name: Get tag if tagged/released
       uses: dawidd6/action-get-tag@v1
@@ -40,23 +31,25 @@ jobs:
     - name: Set TAG env var from tag if tagged/released and update VERSION in version file
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
-        OLD_TAG=$TAG
+        VERSION_FILE="./src/version.hpp"
+        OLD_TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '\n')
         echo "OLD_TAG: $OLD_TAG"
-        TAG=${{ steps.tag.outputs.tag }}
-        echo "TAG: $TAG"
-        echo "TAG=$TAG" >> $GITHUB_ENV
-        echo
-        if [[ $TAG != $OLD_TAG ]]; then
-          echo "Updating VERSION in version file [$OLD_TAG => $TAG]"
-          sed -i -e "s|VERSION .*|VERSION \"v$TAG\"|" $VERSION_FILE
+        NEW_TAG=${{ steps.tag.outputs.tag }}
+        echo "NEW_TAG: $NEW_TAG"
+        if [[ $NEW_TAG == $OLD_TAG ]]; then
+          echo "Old and new TAG/VERSION are the same! No update required!"
+        else
+          echo "Updating VERSION in version file [$OLD_TAG => $NEW_TAG]"
+          sed -i -e "s|VERSION .*|VERSION \"v$NEW_TAG\"|" $VERSION_FILE
+          git diff $VERSION_FILE
           git add $VERSION_FILE
-          git commit -m "Automatic version update to $TAG."
+          git commit -m "Automatic version update from $OLD_TAG to $NEW_TAG."
           git push origin main
           echo "Version updated successfully!"
         fi
 
   ci:
-    needs: update-version
+    needs: version
 
     strategy:
       fail-fast: true
@@ -67,14 +60,42 @@ jobs:
 
     env:
       AMD64_LINUX: amd64-linux
+      ARM64_LINUX: arm64-linux
       AMD64_WINDOWS: amd64-windows
       AMD64_MACOSX: amd64-macosx
-      ARTIFACT_DIR: .artifacts
       ARTIFACT_RETENTION_DAYS: 5
 
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+
+    - name: Set TAG env var from VERSION in version file
+      run: |
+        VERSION_FILE="./src/version.hpp"
+        TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '\n')
+        echo "TAG: $TAG"
+        echo "TAG=$TAG" >> $GITHUB_ENV
+
+    - name: Set up env vars
+      env:
+        AMD64_LINUX_PREFIX: spancopy-${{ env.TAG }}-${{ AMD64_LINUX }}
+        ARM64_LINUX_PREFIX: spancopy-${{ env.TAG }}-${{ ARM64_LINUX }}
+        AMD64_WINDOWS_PREFIX: spancopy-${{ env.TAG }}-${{ AMD64_WINDOWS }}
+        AMD64_MACOSX_PREFIX: spancopy-${{ env.TAG }}-${{ AMD64_MACOSX }}
+      run: |
+        PREFIXES=(AMD64_LINUX_PREFIX ARM64_LINUX_PREFIX AMD64_WINDOWS_PREFIX AMD64_MACOSX_PREFIX)
+        for PREFIX in ${PREFIXES[*]}; do
+          PREFIX_KEY="$PREFIX"
+          PREFIX_VAL="${!PREFIX}"
+          PREFIX_TAR_KEY="${PREFIX_KEY}_TAR"
+          PREFIX_TAR_VAL="${PREFIX_VAL}.tar.gz"
+
+          echo "$PREFIX_KEY: $PREFIX_VAL"
+          echo "$PREFIX_TAR_KEY: $PREFIX_TAR_VAL"
+
+          echo "$PREFIX_KEY: $PREFIX_VAL" >> $GITHUB_ENV
+          echo "$PREFIX_TAR_KEY: $PREFIX_TAR_VAL" >> $GITHUB_ENV
+        done
 
     # --- Build ---
 
@@ -83,100 +104,78 @@ jobs:
       run: |
         sudo apt install -y tree g++-mingw-w64 g++-aarch64-linux-gnu
 
-    - name: Build (spancopy-${{ env.TAG }}-x64-linux)
+    - name: Build (${{ env.AMD64_LINUX_PREFIX }})
       if: runner.os == 'Linux'
       env:
-        BUILD_DIR: build-x64-linux
-      run: |
-        cmake -S . -B $BUILD_DIR
-        cmake --build $BUILD_DIR
-        strip ./$BUILD_DIR/spancopy
-        cd ./$BUILD_DIR
-        TAR="$BUILD_DIR.tar.gz"
-        tar -czvf $TAR spancopy
-        cd ..
-        ls -Gghl ./$BUILD_DIR/spancopy*
+        CXX: g++
+        STRIP: strip
+        BUILD_DIR: ${{ env.AMD64_LINUX_PREFIX }}
+        TAR: ${{ env.AMD64_LINUX_TAR }}
+      run: ./scripts/ci-build.sh
 
-    - name: Build (spancopy-${{ env.TAG }}-arm64-linux)
+    - name: Build (${{ env.ARM64_LINUX_PREFIX }})
       if: runner.os == 'Linux'
       env:
-        BUILD_DIR: build-arm64-linux
-      run: |
-        CXX=aarch64-linux-gnu-g++ cmake -S . -B $BUILD_DIR
-        cmake --build $BUILD_DIR
-        aarch64-linux-gnu-strip ./$BUILD_DIR/spancopy
-        cd ./$BUILD_DIR
-        TAR="$BUILD_DIR.tar.gz"
-        tar -czvf $TAR spancopy
-        cd ..
-        ls -Gghl ./$BUILD_DIR/spancopy*
+        CXX: aarch64-linux-gnu-g++
+        STRIP: aarch64-linux-gnu-strip
+        BUILD_DIR: ${{ env.ARM64_LINUX_PREFIX }}
+        TAR: ${{ env.ARM64_LINUX_TAR }}
+      run: ./scripts/ci-build.sh
 
-    - name: Build (spancopy-${{ env.TAG }}-x64-windows)
+    - name: Build (${{ env.AMD64_WINDOWS_PREFIX }})
       if: runner.os == 'Linux'
       env:
-        BUILD_DIR: build-x64-windows
-      run: |
-        rm -rf ./build
-        CXX=x86_64-w64-mingw32-g++ cmake -S . -B $BUILD_DIR
-        cmake --build $BUILD_DIR
-        x86_64-w64-mingw32-strip ./$BUILD_DIR/spancopy.exe
-        cd ./$BUILD_DIR
-        TAR="$BUILD_DIR.tar.gz"
-        tar -czvf $TAR spancopy.exe
-        cd ..
-        ls -Gghl ./$BUILD_DIR/spancopy*
+        CXX: x86_64-w64-mingw32-g++
+        STRIP: x86_64-w64-mingw32-strip
+        BUILD_DIR: ${{ env.AMD64_WINDOWS_PREFIX }}
+        TAR: ${{ env.AMD64_WINDOWS_TAR }}
+      run: ./scripts/ci-build.sh
 
-    - name: Build (spancopy-${{ env.TAG }}-x64-macos)
+    - name: Build (${{ env.AMD64_MACOSX_PREFIX }})
       if: runner.os == 'macOS'
       env:
-        BUILD_DIR: build-x64-macos
-      run: |
-        rm -rf ./build
-        CXX=clang++ cmake -S . -B $BUILD_DIR
-        cmake --build $BUILD_DIR
-        strip ./$BUILD_DIR/spancopy
-        cd ./$BUILD_DIR
-        TAR="$BUILD_DIR.tar.gz"
-        tar -czvf $TAR spancopy
-        cd ..
-        ls -Gghl ./$BUILD_DIR/spancopy*
+        CXX: clang++
+        STRIP: strip
+        BUILD_DIR: ${{ env.AMD64_MACOSX }}
+        TAR: ${{ env.AMD64_MACOSX_TAR }}
+      run: ./scripts/ci-build.sh
 
     # --- Upload ---
 
-    - name: Upload (spancopy-${{ env.TAG }}-x64-linux)
+    - name: Upload (${{ env.AMD64_LINUX_TAR }})
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-${{ env.TAG }}-x64-linux.tar.gz
-        path: ./build-x64-linux/spancopy.tar.gz
-        retention-days: 5
+        name: ${{ env.AMD64_LINUX_TAR }}
+        path: ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_TAR }}
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (spancopy-${{ env.TAG }}-arm64-linux)
+    - name: Upload (${{ env.ARM64_LINUX_TAR }})
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-${{ env.TAG }}-arm64-linux
-        path: ./build-arm64-linux/spancopy
-        retention-days: 5
+        name: ${{ env.ARM64_LINUX_TAR }}
+        path: ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_TAR }}
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (spancopy-${{ env.TAG }}-x64-windows)
+    - name: Upload (${{ env.AMD64_WINDOWS_TAR }})
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-${{ env.TAG }}-x64-windows
-        path: ./build-x64-windows/spancopy.exe
-        retention-days: 5
+        name: ${{ env.AMD64_WINDOWS_TAR }}
+        path: ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_TAR }}
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (spancopy-${{ env.TAG }}-x64-macos)
+    - name: Upload (${{ env.AMD64_MACOSX_TAR }})
       if: runner.os == 'macOS'
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-${{ env.TAG }}-x64-macos
-        path: ./build-x64-macos/spancopy
-        retention-days: 5
+        name: ${{ env.AMD64_MACOSX_TAR }}
+        path: ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_TAR }}
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
     # --- Upload on tag/release ---
@@ -186,7 +185,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v')
       with:
         files: |
-          ./build-x64-linux/spancopy
-          ./build-arm64-linux/spancopy
-          ./build-x64-windows/spancopy.exe
-          ./build-x64-macos/spancopy
+          ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_TAR }}
+          ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_TAR }}
+          ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_TAR }}
+          ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_TAR }}
