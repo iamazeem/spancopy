@@ -78,10 +78,10 @@ jobs:
 
     - name: Set up env vars
       env:
-        AMD64_LINUX_PREFIX: spancopy-${{ env.TAG }}-${{ AMD64_LINUX }}
-        ARM64_LINUX_PREFIX: spancopy-${{ env.TAG }}-${{ ARM64_LINUX }}
-        AMD64_WINDOWS_PREFIX: spancopy-${{ env.TAG }}-${{ AMD64_WINDOWS }}
-        AMD64_MACOSX_PREFIX: spancopy-${{ env.TAG }}-${{ AMD64_MACOSX }}
+        AMD64_LINUX_PREFIX: spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}
+        ARM64_LINUX_PREFIX: spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}
+        AMD64_WINDOWS_PREFIX: spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}
+        AMD64_MACOSX_PREFIX: spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}
       run: |
         PREFIXES=(AMD64_LINUX_PREFIX ARM64_LINUX_PREFIX AMD64_WINDOWS_PREFIX AMD64_MACOSX_PREFIX)
         for PREFIX in ${PREFIXES[*]}; do
