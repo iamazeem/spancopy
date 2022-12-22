@@ -139,7 +139,7 @@ jobs:
 
     # --- Upload ---
 
-    - name: Upload (${{ env.AMD64_LINUX_TAR }})
+    - name: Upload (${{ env.AMD64_LINUX_PREFIX_TAR }})
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
@@ -148,7 +148,7 @@ jobs:
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.ARM64_LINUX_TAR }})
+    - name: Upload (${{ env.ARM64_LINUX_PREFIX_TAR }})
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
@@ -157,7 +157,7 @@ jobs:
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.AMD64_WINDOWS_TAR }})
+    - name: Upload (${{ env.AMD64_WINDOWS_PREFIX_TAR }})
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
@@ -166,7 +166,7 @@ jobs:
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.AMD64_MACOSX_TAR }})
+    - name: Upload (${{ env.AMD64_MACOSX_PREFIX_TAR }})
       if: runner.os == 'macOS'
       uses: actions/upload-artifact@v3
       with:
