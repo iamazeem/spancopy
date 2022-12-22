@@ -46,6 +46,7 @@ jobs:
           git diff "$VERSION_FILE"
           git add "$VERSION_FILE"
           git commit -m "Automatic version update from $OLD_TAG to $NEW_TAG."
+          git pull origin main
           git push origin main
           echo "Version updated successfully!"
         fi
