@@ -1,4 +1,4 @@
-# spancopy
+# `spancopy`
 
 [![ci](https://github.com/iamazeem/spancopy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/iamazeem/spancopy/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/iamazeem/spancopy?logo=github&style=flat-square)](https://github.com/iamazeem/spancopy/releases)
@@ -135,9 +135,11 @@ Prerequisites:
 - CMake
 - C++17 compiler
 
-In the root directory, run:
+Run:
 
 ```shell
+git clone git@github.com:iamazeem/spancopy.git
+cd spancopy
 cmake -S . -B build
 cmake --build build
 ```
@@ -150,9 +152,10 @@ The executable will be under the `build` directory.
 
 ## Contribute
 
-- Fork the project.
+- [Fork](https://github.com/iamazeem/spancopy/fork) the project.
+- Clone the forked project.
 - Check out the latest `main` branch.
-- Create a feature or bugfix branch from `main`.
+- Create a `feature` or `bugfix` branch from `main`.
 - Commit and push your changes.
 - Submit the PR.
 
