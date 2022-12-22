@@ -20,6 +20,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+      if: startsWith(github.ref, 'refs/tags/v')
       with:
         ref: main
         fetch-depth: '0'
@@ -73,6 +74,13 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+
+    - name: Checkout on tag/release
+      uses: actions/checkout@v3
+      if: startsWith(github.ref, 'refs/tags/v')
+      with:
+        ref: main
+        fetch-depth: '0'
 
     - name: Set TAG env var from VERSION in version file
       run: |
