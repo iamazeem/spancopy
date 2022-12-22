@@ -6,10 +6,9 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/iamazeem/spancopy/blob/master/LICENSE)
 
 `spancopy` is a CLI tool to span (copy) files with size threshold from `source`
-to `destination` directory. The `source` files are spanned over subdirectories
-under the `destination` directory. A main subdirectory named as the current
-timestamp is created under the `destination` directory to group all the spanned
-files under their respective subdirectories and to avoid conflicts.
+to `destination` directory. On reaching the `threshold` value, the `source`
+files are spanned over multiple subdirectories under the `destination`
+directory.
 
 For more details, pleas refer to the [Usage](#usage) section.
 
