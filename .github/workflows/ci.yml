@@ -21,7 +21,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-        ref: ${{ github.head_ref }}
+        ref: main
+        fetch-depth: '0'
 
     - name: Get tag if tagged/released
       uses: dawidd6/action-get-tag@v1
