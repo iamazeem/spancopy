@@ -84,7 +84,7 @@ jobs:
         for PREFIX in ${PREFIXES[*]}; do
           PREFIX_KEY="$PREFIX"
           PREFIX_VAL="${!PREFIX}"
-          PREFIX_TAR_KEY="${PREFIX_KEY}_TAR"
+          PREFIX_TAR_KEY=$(echo "$PREFIX_KEY" | tr -d "_PREFIX")_TAR
           PREFIX_TAR_VAL="${PREFIX_VAL}.tar.gz"
 
           echo "$PREFIX_KEY: $PREFIX_VAL"
@@ -133,7 +133,7 @@ jobs:
       env:
         CXX: clang++
         STRIP: strip
-        BUILD_DIR: ${{ env.AMD64_MACOSX }}
+        BUILD_DIR: ${{ env.AMD64_MACOSX_PREFIX }}
         TAR: ${{ env.AMD64_MACOSX_TAR }}
       run: ./scripts/ci-build.sh
 

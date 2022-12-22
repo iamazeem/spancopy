@@ -3,7 +3,7 @@
 set -e
 
 if [[ -z $BUILD_DIR || -z $TAR ]]; then
-  echo "[ERR] Set BUILD_DIR and TAR."
+  echo "[ERR] Set BUILD_DIR and TAR env vars!"
   exit 1
 fi
 
