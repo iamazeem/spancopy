@@ -6,7 +6,7 @@
 int main(int argc, char** argv)
 {
     const auto exe = fs::path{argv[0]}.filename().string();
-    const auto exe_with_version = exe + ' ' + VERSION;
+    const auto exe_with_version = exe + " v" + VERSION;
 
     CLI::App app{exe_with_version + " - a CLI tool to span (copy) files with size threshold"};
     app.footer(

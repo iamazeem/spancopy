@@ -11,7 +11,50 @@ on:
     - '**.md'
 
 jobs:
+  update-version:
+    runs-on: ubuntu-20.04
+
+    env:
+      VERSION_FILE: ./src/version.hpp
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Fetch VERSION from version file and set TAG env var
+      run: |
+        TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '\n')
+        echo "TAG: $TAG"
+        echo "TAG=$TAG" >> $GITHUB_ENV
+
+    - name: Get tag if tagged/released
+      uses: dawidd6/action-get-tag@v1
+      if: startsWith(github.ref, 'refs/tags/v')
+      id: tag
+      with:
+        strip_v: true
+
+    - name: Set TAG env var from tag if tagged/released and update VERSION in version file
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        OLD_TAG=$TAG
+        echo "OLD_TAG: $OLD_TAG"
+        TAG=${{ steps.tag.outputs.tag }}
+        echo "TAG: $TAG"
+        echo "TAG=$TAG" >> $GITHUB_ENV
+        echo
+        if [[ $TAG != $OLD_TAG ]]; then
+          echo "Updating VERSION in version file [$OLD_TAG => $TAG]"
+          sed -i -e "s|VERSION .*|VERSION \"v$TAG\"|" $VERSION_FILE
+          git add $VERSION_FILE
+          git commit -m "Automatic version update to $TAG."
+          git push origin main
+          echo "Version updated successfully!"
+        fi
+
   ci:
+    needs: update-version
+
     strategy:
       fail-fast: true
       matrix:
@@ -19,18 +62,25 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      AMD64_LINUX: amd64-linux
+      AMD64_WINDOWS: amd64-windows
+      AMD64_MACOSX: amd64-macosx
+      ARTIFACT_DIR: .artifacts
+      ARTIFACT_RETENTION_DAYS: 5
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+
+    # --- Build ---
 
     - name: Install Dependencies
       if: runner.os == 'Linux'
       run: |
         sudo apt install -y tree g++-mingw-w64 g++-aarch64-linux-gnu
 
-    # --- Build ---
-
-    - name: Build (spancopy-x64-linux)
+    - name: Build (spancopy-${{ env.TAG }}-x64-linux)
       if: runner.os == 'Linux'
       env:
         BUILD_DIR: build-x64-linux
@@ -38,9 +88,13 @@ jobs:
         cmake -S . -B $BUILD_DIR
         cmake --build $BUILD_DIR
         strip ./$BUILD_DIR/spancopy
-        ls -Gghl ./$BUILD_DIR/spancopy
+        cd ./$BUILD_DIR
+        TAR="$BUILD_DIR.tar.gz"
+        tar -czvf $TAR spancopy
+        cd ..
+        ls -Gghl ./$BUILD_DIR/spancopy*
 
-    - name: Build (spancopy-arm64-linux)
+    - name: Build (spancopy-${{ env.TAG }}-arm64-linux)
       if: runner.os == 'Linux'
       env:
         BUILD_DIR: build-arm64-linux
@@ -48,9 +102,13 @@ jobs:
         CXX=aarch64-linux-gnu-g++ cmake -S . -B $BUILD_DIR
         cmake --build $BUILD_DIR
         aarch64-linux-gnu-strip ./$BUILD_DIR/spancopy
-        ls -Gghl ./$BUILD_DIR/spancopy
+        cd ./$BUILD_DIR
+        TAR="$BUILD_DIR.tar.gz"
+        tar -czvf $TAR spancopy
+        cd ..
+        ls -Gghl ./$BUILD_DIR/spancopy*
 
-    - name: Build (spancopy-x64-windows)
+    - name: Build (spancopy-${{ env.TAG }}-x64-windows)
       if: runner.os == 'Linux'
       env:
         BUILD_DIR: build-x64-windows
@@ -59,9 +117,13 @@ jobs:
         CXX=x86_64-w64-mingw32-g++ cmake -S . -B $BUILD_DIR
         cmake --build $BUILD_DIR
         x86_64-w64-mingw32-strip ./$BUILD_DIR/spancopy.exe
-        ls -Gghl ./$BUILD_DIR/spancopy.exe
+        cd ./$BUILD_DIR
+        TAR="$BUILD_DIR.tar.gz"
+        tar -czvf $TAR spancopy.exe
+        cd ..
+        ls -Gghl ./$BUILD_DIR/spancopy*
 
-    - name: Build (spancopy-x64-macos)
+    - name: Build (spancopy-${{ env.TAG }}-x64-macos)
       if: runner.os == 'macOS'
       env:
         BUILD_DIR: build-x64-macos
@@ -70,42 +132,46 @@ jobs:
         CXX=clang++ cmake -S . -B $BUILD_DIR
         cmake --build $BUILD_DIR
         strip ./$BUILD_DIR/spancopy
-        ls -Gghl ./$BUILD_DIR/spancopy
+        cd ./$BUILD_DIR
+        TAR="$BUILD_DIR.tar.gz"
+        tar -czvf $TAR spancopy
+        cd ..
+        ls -Gghl ./$BUILD_DIR/spancopy*
 
     # --- Upload ---
 
-    - name: Upload (spancopy-x64-linux)
+    - name: Upload (spancopy-${{ env.TAG }}-x64-linux)
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-x64-linux
-        path: ./build-x64-linux/spancopy
+        name: spancopy-${{ env.TAG }}-x64-linux.tar.gz
+        path: ./build-x64-linux/spancopy.tar.gz
         retention-days: 5
         if-no-files-found: error
 
-    - name: Upload (spancopy-arm64-linux)
+    - name: Upload (spancopy-${{ env.TAG }}-arm64-linux)
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-arm64-linux
+        name: spancopy-${{ env.TAG }}-arm64-linux
         path: ./build-arm64-linux/spancopy
         retention-days: 5
         if-no-files-found: error
 
-    - name: Upload (spancopy-x64-windows)
+    - name: Upload (spancopy-${{ env.TAG }}-x64-windows)
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-x64-windows
+        name: spancopy-${{ env.TAG }}-x64-windows
         path: ./build-x64-windows/spancopy.exe
         retention-days: 5
         if-no-files-found: error
 
-    - name: Upload (spancopy-x64-macos)
+    - name: Upload (spancopy-${{ env.TAG }}-x64-macos)
       if: runner.os == 'macOS'
       uses: actions/upload-artifact@v3
       with:
-        name: spancopy-x64-macos
+        name: spancopy-${{ env.TAG }}-x64-macos
         path: ./build-x64-macos/spancopy
         retention-days: 5
         if-no-files-found: error
