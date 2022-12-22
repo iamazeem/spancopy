@@ -10,6 +10,9 @@ on:
     paths-ignore:
     - '**.md'
 
+env:
+  TAG: ""
+
 jobs:
   update-version:
     runs-on: ubuntu-20.04
