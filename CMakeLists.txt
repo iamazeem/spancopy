@@ -20,7 +20,13 @@ set(SOURCES
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 if (APPLE)
-    target_link_libraries(${PROJECT_NAME})
+    target_link_libraries(
+        ${PROJECT_NAME}
+        -mmacosx-version-min=10.15
+    )
 else()
-    target_link_libraries(${PROJECT_NAME} -static)
+    target_link_libraries(
+        ${PROJECT_NAME}
+        -static
+    )
 endif()
