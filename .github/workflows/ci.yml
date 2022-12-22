@@ -41,10 +41,10 @@ jobs:
         else
           echo "Updating VERSION in version file [$OLD_TAG => $NEW_TAG]"
           sed -i -e "s|VERSION .*|VERSION \"$NEW_TAG\"|" $VERSION_FILE
-          git config --local user.name 'Azeem Sajid'
-          git config --local user.email 'azeem.sajid@gmail.com'
-          git diff $VERSION_FILE
-          git add $VERSION_FILE
+          git config --global user.name 'Azeem Sajid'
+          git config --global user.email 'azeem.sajid@gmail.com'
+          git diff "$VERSION_FILE"
+          git add "$VERSION_FILE"
           git commit -m "Automatic version update from $OLD_TAG to $NEW_TAG."
           git push origin main
           echo "Version updated successfully!"
