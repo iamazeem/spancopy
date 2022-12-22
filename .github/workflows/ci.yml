@@ -9,6 +9,9 @@ on:
     branches: [main]
     paths-ignore:
     - '**.md'
+  release:
+    branches: [main]
+    types: [published]
 
 jobs:
   version:
