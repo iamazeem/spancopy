@@ -1,4 +1,4 @@
-# `spancopy`
+# spancopy
 
 [![ci](https://github.com/iamazeem/spancopy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/iamazeem/spancopy/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/iamazeem/spancopy?logo=github&style=flat-square)](https://github.com/iamazeem/spancopy/releases)
@@ -19,13 +19,13 @@ value.
 There must be enough space at `target` for the `source` files to be copied
 successfully.
 
-**NOTE**: Only files are copied. Empty directories are ignored.
-
-Supports:
+Supported and tested on:
 
 - Linux (AMD64 and ARM64)
 - macOS
 - Windows
+
+See the [CI workflow](.github/workflows/ci.yml) for more details.
 
 ## Download
 

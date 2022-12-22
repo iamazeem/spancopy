@@ -7,15 +7,22 @@
 
 namespace spancopy {
 
-spanner::spanner(const config& config) noexcept
+spanner::spanner(
+    const std::uintmax_t threshold,
+    const fs::path& source,
+    const fs::path& target) noexcept
     :
-    m_config{config},
+    m_threshold{threshold},
+    m_source{source},
+    m_target{target},
     m_target_root_dir_path{generate_target_root_dir_path()}
 {
-    std::cout << "[INF] threshold: [" << m_config.threshold() << " bytes]\n"
-              << "[INF] source:    [" << m_config.source().generic_string() << "]\n"
-              << "[INF] target:    [" << m_config.target().generic_string() << "]\n"
-              << "[INF] target root directory: [" << m_target_root_dir_path.generic_string() << "]\n";
+    std::cout
+        << "[INF] threshold: [" << m_threshold << " bytes]\n"
+        << "[INF] source:    [" << m_source.generic_string() << "]\n"
+        << "[INF] target:    [" << m_target.generic_string() << "]\n"
+        << "[INF] target root directory: [" << m_target_root_dir_path.generic_string() << "]"
+        << std::endl;
 }
 
 bool spanner::span() const noexcept
@@ -42,12 +49,12 @@ fs::path spanner::generate_target_root_dir_path() const noexcept
     const auto now_time_t = system_clock::to_time_t(now);
     const auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
     oss << std::put_time(std::localtime(&now_time_t), "%Y%m%dT%H%M%S") << ms.count();
-    return m_config.target() / oss.str();
+    return m_target / oss.str();
 }
 
 bool spanner::is_target_space_available(const std::uintmax_t bytes) const noexcept
 {
-    return (fs::space(m_config.target()).available > bytes);
+    return (fs::space(m_target).available > bytes);
 }
 
 void spanner::remove_target_dir_if_exists() const noexcept
@@ -70,7 +77,7 @@ fs::path spanner::generate_target_file_path(
     const fs::path& source_file_path,
     const fs::path& target_subdir_root_path) const noexcept
 {
-    const auto source_root_dir_path_str = m_config.source().generic_string();
+    const auto source_root_dir_path_str = m_source.generic_string();
     const auto source_file_path_str = source_file_path.generic_string();
     const auto relative_source_file_path_str = source_file_path_str.substr(source_root_dir_path_str.length());
     const auto target_subdir_root_path_str = target_subdir_root_path.generic_string();
@@ -84,14 +91,14 @@ std::optional<spanner::source_file_map_t> spanner::generate_source_file_map() co
     std::size_t total_source_file_count{0};
     std::uintmax_t source_dir_size{0};
     source_file_map_t source_file_map;
-    for (const auto& entry : fs::recursive_directory_iterator(m_config.source()))
+    for (const auto& entry : fs::recursive_directory_iterator(m_source))
     {
         if (entry.is_regular_file())
         {
             const auto path = entry.path();
             const auto size = entry.file_size();
 
-            if (size > m_config.threshold())
+            if (size > m_threshold)
             {
                 std::cerr << "[ERR] file cannot be spanned! [" << path.generic_string() << "] (" << size << ")\n";
                 ++unspanable_source_file_count;
@@ -155,7 +162,7 @@ void spanner::copy_source_to_target(const source_file_map_t& source_file_map) co
     {
         for (const auto& [source_filename, source_file_size] : source_file)
         {
-            if ((target_subdir_size + source_file_size) > m_config.threshold())
+            if ((target_subdir_size + source_file_size) > m_threshold)
             {
                 target_subdir_size = 0;
                 ++target_subdir_count;

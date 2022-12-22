@@ -2,14 +2,20 @@
 
 #include <map>
 #include <optional>
-#include "config.hpp"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace spancopy {
 
 class spanner final
 {
 public:
-    spanner(const config& config) noexcept;
+    spanner(
+        const std::uintmax_t threshold,
+        const fs::path& source,
+        const fs::path& target) noexcept;
+
     bool span() const noexcept;
 
 private:
@@ -30,7 +36,10 @@ private:
     std::optional<source_file_map_t> generate_source_file_map() const noexcept;
     void copy_source_to_target(const source_file_map_t& source_file_map) const noexcept;
 
-    const config m_config;
+    const std::uintmax_t m_threshold{};
+    const fs::path m_source;
+    const fs::path m_target;
+
     const fs::path m_target_root_dir_path;
 };
 

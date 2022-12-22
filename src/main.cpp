@@ -1,14 +1,79 @@
 #include <cstdlib>
-#include "cli.hpp"
+#include <CLI11.hpp>
+#include "version.hpp"
 #include "spanner.hpp"
 
 int main(int argc, char** argv)
 {
-    if (const auto config = spancopy::cli::load(argc, argv); !config)
+    const auto exe = fs::path{argv[0]}.filename().string();
+    const auto exe_with_version = exe + ' ' + VERSION;
+
+    CLI::App app{exe_with_version + " - a CLI tool to copy files from source to target per threshold"};
+    app.footer(
+        "Notes:\n"
+        "- The `threshold` unit may be bytes, KB, MB, GB, etc.\n"
+        "- The `threshold` must be less or equal to all source files' sizes.\n"
+        "- A main subdirectory under `target` is created to avoid conflicts.\n"
+        "    Format:  YYYYMMDDTHHMMSSMS\n"
+        "    Example: 20220820T170159946\n"
+        "- The `target` directory tree is removed if it exists already.\n"
+        "- Only files are copied. Empty directories are ignored.\n"
+        "- On all platforms, the `/` is used as the path separator.\n"
+        "\n"
+        "Examples:\n"
+        "  # With Linux style options\n"
+        "  spancopy --threshold 500mb --source <source> --target <target>\n"
+        "\n"
+        "  # With Windows style options\n"
+        "  spancopy /threshold 100kb /source <source> /target <target>\n"
+        "\n"
+        "For any issues and/or constructive feedback, please contact the\n"
+        "author or open an issue directly on the GitHub repository.\n"
+        "\n"
+        "Author: AZEEM SAJID <azeem.sajid@gmail.com>\n"
+        "GitHub: https://github.com/iamazeem/spancopy\n"
+    );
+
+    app.allow_windows_style_options();
+
+    app.set_help_flag("-h,--help", "show help and exit");
+    app.set_version_flag("-v,--version", exe_with_version, "show version and exit");
+
+    std::uintmax_t threshold = 0;
+    app.add_option("-t,--threshold", threshold, "threshold size to span files")
+        ->required()
+        ->transform(CLI::AsSizeValue{false})
+        ->check(CLI::PositiveNumber);
+
+    fs::path source;
+    app.add_option("SOURCE", source, "source directory")
+        ->required()
+        ->check(CLI::ExistingDirectory);
+
+    fs::path target;
+    app.add_option("DEST", target, "destination directory")
+        ->required()
+        ->check(CLI::ExistingDirectory);
+
+    try
     {
+        app.parse(argc, argv);
+        std::cout << "after parse" << std::endl;
+    }
+    catch (const CLI::Success& e)
+    {
+        // -h,--help or -v,--version
+        app.exit(e);
+        return EXIT_SUCCESS;
+    }
+    catch (const CLI::ParseError& e)
+    {
+        app.exit(e);
         return EXIT_FAILURE;
     }
-    else if (const auto spanner = spancopy::spanner{*config}; !spanner.span())
+
+    const spancopy::spanner spanner{threshold, source, target};
+    if (!spanner.span())
     {
         return EXIT_FAILURE;
     }
