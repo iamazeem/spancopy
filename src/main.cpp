@@ -8,30 +8,29 @@ int main(int argc, char** argv)
     const auto exe = fs::path{argv[0]}.filename().string();
     const auto exe_with_version = exe + ' ' + VERSION;
 
-    CLI::App app{exe_with_version + " - a CLI tool to copy files from source to target per threshold"};
+    CLI::App app{exe_with_version + " - a CLI tool to copy files from source to destination per threshold"};
     app.footer(
         "Notes:\n"
         "- The `threshold` unit may be bytes, KB, MB, GB, etc.\n"
         "- The `threshold` must be less or equal to all source files' sizes.\n"
-        "- A main subdirectory under `target` is created to avoid conflicts.\n"
+        "- A main subdirectory under `destination` is created to avoid conflicts.\n"
         "    Format:  YYYYMMDDTHHMMSSMS\n"
         "    Example: 20220820T170159946\n"
-        "- The `target` directory tree is removed if it exists already.\n"
+        "- The `destination` directory tree is removed if it exists already.\n"
         "- Only files are copied. Empty directories are ignored.\n"
         "- On all platforms, the `/` is used as the path separator.\n"
+        // "\n"
+        // "Examples:\n"
+        // "  # With Linux style options\n"
+        // "  spancopy --threshold 500mb --source <source> --destination <destination>\n"
+        // "\n"
+        // "  # With Windows style options\n"
+        // "  spancopy /threshold 100kb /source <source> /destination <destination>\n"
         "\n"
-        "Examples:\n"
-        "  # With Linux style options\n"
-        "  spancopy --threshold 500mb --source <source> --target <target>\n"
-        "\n"
-        "  # With Windows style options\n"
-        "  spancopy /threshold 100kb /source <source> /target <target>\n"
-        "\n"
-        "For any issues and/or constructive feedback, please contact the\n"
-        "author or open an issue directly on the GitHub repository.\n"
-        "\n"
-        "Author: AZEEM SAJID <azeem.sajid@gmail.com>\n"
+        "For any feedback or issues, please open an issue on GitHub.\n"
         "GitHub: https://github.com/iamazeem/spancopy\n"
+        "\n"
+        "Written by: AZEEM SAJID <azeem.sajid@gmail.com>\n"
     );
 
     app.allow_windows_style_options();
@@ -50,8 +49,8 @@ int main(int argc, char** argv)
         ->required()
         ->check(CLI::ExistingDirectory);
 
-    fs::path target;
-    app.add_option("DEST", target, "destination directory")
+    fs::path destination;
+    app.add_option("DEST", destination, "destination directory")
         ->required()
         ->check(CLI::ExistingDirectory);
 
@@ -72,7 +71,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    const spancopy::spanner spanner{threshold, source, target};
+    const spancopy::spanner spanner{threshold, source, destination};
     if (!spanner.span())
     {
         return EXIT_FAILURE;

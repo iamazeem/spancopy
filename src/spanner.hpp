@@ -14,7 +14,7 @@ public:
     spanner(
         const std::uintmax_t threshold,
         const fs::path& source,
-        const fs::path& target) noexcept;
+        const fs::path& destination) noexcept;
 
     bool span() const noexcept;
 
@@ -38,7 +38,7 @@ private:
 
     const std::uintmax_t m_threshold{};
     const fs::path m_source;
-    const fs::path m_target;
+    const fs::path m_destination;
 
     const fs::path m_target_root_dir_path;
 };
