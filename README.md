@@ -6,12 +6,12 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/iamazeem/spancopy/blob/master/LICENSE)
 
 `spancopy` is a CLI tool to span (copy) files with size threshold from `source`
-to `destination` directory. The source files are spanned over subdirectories
-under the `destination` directory. A main subdirectory is created under the
-`destination` directory to group all the spanned files under their respective
-subdirectories and to avoid conflicts.
+to `destination` directory. The `source` files are spanned over subdirectories
+under the `destination` directory. A main subdirectory named as the current
+timestamp is created under the `destination` directory to group all the spanned
+files under their respective subdirectories and to avoid conflicts.
 
-Pleas refer to the [Usage](#usage) section for more details.
+For more details, pleas refer to the [Usage](#usage) section.
 
 Supported and tested on:
 
@@ -52,11 +52,11 @@ Notes:
   `threshold` value. So, choose a `threshold` value accordingly.
 - The `destination` directory must have enough space for all the `source`
   files to be copied successfully.
-- The contents of the `destination` directory are removed if it's not empty.
 - A main subdirectory under `destination` is created to avoid conflicts.
   Following naming convention is used for this subdirectory:
     Format:  YYYYMMDDTHHMMSSMS
     Example: 20220820T170159946
+- The main subdirectory under `destination` is removed if it already exists.
 - For each `threshold` reached, the file(s) with their complete paths are
   copied under their respective subdirectories i.e. 1, 2, 3, and so on.
   For example, if for a `source` directory with some files, the `threshold`
