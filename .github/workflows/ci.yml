@@ -65,10 +65,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      AMD64_LINUX: amd64-linux
-      ARM64_LINUX: arm64-linux
-      AMD64_WINDOWS: amd64-windows
-      AMD64_MACOSX: amd64-macosx
       ARTIFACT_RETENTION_DAYS: 5
 
     steps:
@@ -92,14 +88,16 @@ jobs:
 
     - name: Set up env vars
       env:
-        AMD64_LINUX_PREFIX: spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}
-        ARM64_LINUX_PREFIX: spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}
-        AMD64_WINDOWS_PREFIX: spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}
-        AMD64_MACOSX_PREFIX: spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}
+        TAG: ${{ env.TAG }}
       run: |
-        PREFIXES=(AMD64_LINUX_PREFIX ARM64_LINUX_PREFIX AMD64_WINDOWS_PREFIX AMD64_MACOSX_PREFIX)
+        AMD64_LINUX="spancopy-$TAG-amd64-linux"
+        ARM64_LINUX="spancopy-$TAG-arm64-linux"
+        AMD64_WINDOWS="spancopy-$TAG-amd64-windows"
+        AMD64_MACOSX="spancopy-$TAG-amd64-macosx"
+
+        PREFIXES=(AMD64_LINUX ARM64_LINUX AMD64_WINDOWS AMD64_MACOSX)
         for PREFIX in ${PREFIXES[*]}; do
-          PREFIX_KEY="$PREFIX"
+          PREFIX_KEY="${PREFIX}_PREFIX"
           PREFIX_VAL="${!PREFIX}"
           PREFIX_TAR_KEY="${PREFIX_KEY}_TAR"
           PREFIX_TAR_VAL="${PREFIX_VAL}.tar.gz"
