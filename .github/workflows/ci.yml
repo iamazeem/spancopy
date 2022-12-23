@@ -25,12 +25,16 @@ jobs:
         ref: main
         fetch-depth: '0'
 
-    - name: Get tag if tagged/released
-      uses: dawidd6/action-get-tag@v1
+    - name: Get tag if tagged/released and set TAG env var
       if: startsWith(github.ref, 'refs/tags/v')
-      id: tag
-      with:
-        strip_v: true
+      run: |
+        TAG=$(echo $GITHUB_REF | cut -d '/' -f3)
+        echo "TAG: $TAG"
+        if [[ $TAG == "v"* ]]; then
+          TAG="${TAG:1}"
+        fi
+        echo "TAG: $TAG"
+        echo "TAG=$TAG" >> $GITHUB_ENV
 
     - name: Set TAG env var from tag if tagged/released and update VERSION in version file
       if: startsWith(github.ref, 'refs/tags/v')
@@ -38,10 +42,10 @@ jobs:
         VERSION_FILE="./src/version.hpp"
         OLD_TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '"' | tr -d '\n')
         echo "OLD_TAG: $OLD_TAG"
-        NEW_TAG=${{ steps.tag.outputs.tag }}
+        NEW_TAG="$TAG"
         echo "NEW_TAG: $NEW_TAG"
         if [[ "$NEW_TAG" == "$OLD_TAG" ]]; then
-          echo "Old and new TAG/VERSION are the same! No update required!"
+          echo "Old and new tags are the same! No update required!"
         else
           echo "Updating VERSION in version file [$OLD_TAG => $NEW_TAG]"
           sed -i -e "s|VERSION .*|VERSION \"$NEW_TAG\"|" $VERSION_FILE
