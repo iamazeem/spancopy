@@ -3,6 +3,7 @@
 #include <map>
 #include <optional>
 #include <filesystem>
+#include <system_error>
 
 namespace fs = std::filesystem;
 
@@ -21,7 +22,7 @@ public:
 private:
     fs::path generate_destination_root_dir_path() const noexcept;
     bool is_destination_space_available(const std::uintmax_t source_dir_size) const noexcept;
-    void remove_destination_dir_if_exists() const noexcept;
+    bool remove_destination_dir_if_exists() const noexcept;
     fs::path generate_destination_file_path(
         const fs::path& source_file_path,
         const fs::path& destination_subdir_root_path) const noexcept;
@@ -35,13 +36,15 @@ private:
     using source_file_map_t = std::map<fs::path, source_file_t>;
 
     std::optional<source_file_map_t> generate_source_file_map() const noexcept;
-    void copy_source_to_destination(const source_file_map_t& source_file_map) const noexcept;
+    bool copy_source_to_destination(const source_file_map_t& source_file_map) const noexcept;
 
     const std::uintmax_t m_threshold{};
     const fs::path m_source;
     const fs::path m_destination;
 
     const fs::path m_destination_root_dir_path;
+
+    mutable std::error_code m_ec;
 };
 
 } // spancopy

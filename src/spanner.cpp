@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iomanip>
 #include <sstream>
 #include <chrono>
 #include <ctime>
@@ -26,15 +25,18 @@ spanner::spanner(
 
 bool spanner::span() const noexcept
 {
-    remove_destination_dir_if_exists();
+    if (!remove_destination_dir_if_exists())
+    {
+        return false;
+    }
 
     if (const auto source_file_map = generate_source_file_map(); !source_file_map)
     {
         return false;
     }
-    else
+    else if (!copy_source_to_destination(*source_file_map))
     {
-        copy_source_to_destination(*source_file_map);
+        return false;
     }
 
     return true;
@@ -53,23 +55,57 @@ fs::path spanner::generate_destination_root_dir_path() const noexcept
 
 bool spanner::is_destination_space_available(const std::uintmax_t bytes) const noexcept
 {
-    return (fs::space(m_destination).available > bytes);
+    if (const auto space_info = fs::space(m_destination, m_ec); m_ec)
+    {
+        std::cerr << "[ERR] unable to query available space! " << m_ec.message() << '\n';
+        return false;
+    }
+    else
+    {
+        return (space_info.available > bytes);
+    }
 }
 
-void spanner::remove_destination_dir_if_exists() const noexcept
+bool spanner::remove_destination_dir_if_exists() const noexcept
 {
-    if (!fs::exists(m_destination_root_dir_path))
+    if (!fs::exists(m_destination_root_dir_path, m_ec) && !m_ec)
     {
-        return;
+        std::cout << "[INF] no existing destination root directory found!\n";
+        return true;
+    }
+    else if (m_ec)
+    {
+        std::cerr << "[ERR] unable to check existence of destination root directory! " << m_ec.message() << '\n';
+        return false;
     }
 
     std::cout << "[WRN] removing existing destination root directory [" << m_destination_root_dir_path.generic_string() << "]\n";
-    for (const auto& entry : fs::directory_iterator{m_destination_root_dir_path})
+    for (const auto& entry : fs::directory_iterator{m_destination_root_dir_path, m_ec})
     {
-        fs::remove_all(entry.path());
+        if (m_ec)
+        {
+            std::cerr << "[ERR] unable to iterate over destination root directory path! " << m_ec.message() << '\n';
+            return false;
+        }
+
+        const auto path = entry.path();
+        if (fs::remove_all(path, m_ec) < 0)
+        {
+            std::cerr << "[ERR] unable to remove destination subdirectory path! [" << path << "] " << m_ec.message() << '\n';
+            return false;
+        }
     }
-    fs::remove(m_destination_root_dir_path);
-    std::cout << "[WRN] existing destination root directory removed! [" << m_destination_root_dir_path.generic_string() << "]\n";
+
+    if (!fs::remove(m_destination_root_dir_path, m_ec))
+    {
+        std::cerr << "[ERR] unable to remove destination root directory path! ["
+                  << m_destination_root_dir_path.generic_string() << "] "
+                  << m_ec.message() << '\n';
+        return false;
+    }
+
+    std::cout << "[INF] existing destination root directory removed! [" << m_destination_root_dir_path.generic_string() << "]\n";
+    return true;
 }
 
 fs::path spanner::generate_destination_file_path(
@@ -90,16 +126,27 @@ std::optional<spanner::source_file_map_t> spanner::generate_source_file_map() co
     std::size_t total_source_file_count{0};
     std::uintmax_t source_dir_size{0};
     source_file_map_t source_file_map;
-    for (const auto& entry : fs::recursive_directory_iterator(m_source))
+    for (const auto& entry : fs::recursive_directory_iterator{m_source, m_ec})
     {
-        if (entry.is_regular_file())
+        if (m_ec)
+        {
+            std::cerr << "[ERR] unable to iterate over source directory! [" << m_source.generic_string() << "] " << m_ec.message() << '\n';
+            return std::nullopt;
+        }
+
+        if (entry.is_regular_file(m_ec))
         {
             const auto path = entry.path();
-            const auto size = entry.file_size();
+            if (m_ec)
+            {
+                std::cerr << "[WRN] unable to check if it is a regular file! [" << path.generic_string() << "] " << m_ec.message() << '\n';
+                continue;
+            }
 
+            const auto size = entry.file_size();
             if (size > m_threshold)
             {
-                std::cerr << "[ERR] file cannot be spanned! [" << path.generic_string() << "] (" << size << ")\n";
+                std::cerr << "[WRN] file cannot be spanned! [" << path.generic_string() << "] (" << size << ")\n";
                 ++unspanable_source_file_count;
             }
 
@@ -149,7 +196,7 @@ std::optional<spanner::source_file_map_t> spanner::generate_source_file_map() co
     return source_file_map;
 }
 
-void spanner::copy_source_to_destination(const source_file_map_t& source_file_map) const noexcept
+bool spanner::copy_source_to_destination(const source_file_map_t& source_file_map) const noexcept
 {
     std::cout << "[INF] copying source files to destination\n";
 
@@ -175,8 +222,22 @@ void spanner::copy_source_to_destination(const source_file_map_t& source_file_ma
 
             const auto source_file_path = source_parent_path / source_filename;
             const auto destination_file_path = generate_destination_file_path(source_file_path, destination_subdir_root_path);
-            fs::create_directories(destination_file_path.parent_path());
-            fs::copy(source_file_path, destination_file_path);
+            const auto destination_parent_path = destination_file_path.parent_path();
+
+            fs::create_directories(destination_parent_path, m_ec);
+            if (m_ec)
+            {
+                std::cerr << "[ERR] unable to create destination parent path! [" << destination_parent_path << "] "
+                            << m_ec.message() << '\n';
+                return false;
+            }
+
+            fs::copy(source_file_path, destination_file_path, m_ec);
+            if (m_ec)
+            {
+                std::cerr << "[ERR] unable to copy file! [" << source_filename << "] " << m_ec.message() << '\n';
+                return false;
+            }
 
             destination_subdir_size += source_file_size;
             ++total_destination_file_count;
@@ -191,6 +252,7 @@ void spanner::copy_source_to_destination(const source_file_map_t& source_file_ma
 
     std::cout << "[INF] SUMMARY: total " << total_destination_file_count << " files spanned over "
               << destination_subdir_count << " subdirectories\n";
+    return true;
 }
 
 } // spancopy
