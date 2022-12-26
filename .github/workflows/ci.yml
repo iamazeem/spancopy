@@ -127,7 +127,9 @@ jobs:
         STRIP: strip
         BUILD_DIR: ${{ env.AMD64_LINUX_PREFIX }}
         TAR: ${{ env.AMD64_LINUX_PREFIX_TAR }}
-      run: ./scripts/ci-build.sh
+      run: |
+        ./scripts/ci-build.sh
+        ./tests/test.sh 
 
     - name: Build (${{ env.ARM64_LINUX_PREFIX }})
       if: runner.os == 'Linux'
@@ -154,7 +156,9 @@ jobs:
         STRIP: strip
         BUILD_DIR: ${{ env.AMD64_MACOSX_PREFIX }}
         TAR: ${{ env.AMD64_MACOSX_PREFIX_TAR }}
-      run: ./scripts/ci-build.sh
+      run: |
+        ./scripts/ci-build.sh
+        ./tests/test.sh 
 
     # --- Upload ---
 
