@@ -14,6 +14,7 @@ echo "[INF] CXX:        $CXX"
 echo "[INF] STRIP:      $STRIP"
 echo "[INF] BUILD_DIR:  $BUILD_DIR"
 echo "[INF] TAR:        $TAR"
+echo "[INF] ZIP:        $ZIP"
 
 echo "[INF] Building"
 rm -rf ./"$BUILD_DIR"
@@ -23,8 +24,9 @@ $STRIP ./"$BUILD_DIR"/spancopy*
 
 echo "[INF] Compressing"
 cd ./"$BUILD_DIR"
-tar -czvf "$TAR" spancopy*
-zip -9 "$ZIP" spancopy*
+EXE=$(ls {spancopy,spancopy.exe} 2>/dev/null)
+tar -czvf "$TAR" "$EXE"
+zip "$ZIP" "$EXE"
 cd ..
 ls -Gghl ./"$BUILD_DIR"/spancopy*
 
