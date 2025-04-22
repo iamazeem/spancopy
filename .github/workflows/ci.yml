@@ -256,7 +256,7 @@ jobs:
           ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_ZIP }}
 
   publish-winget-package:
-    # if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
     needs: [ci]
     runs-on: windows-latest
 
@@ -272,7 +272,6 @@ jobs:
         ./wingetcreate info
 
     - name: Update
-      if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
       env:
         TAG: ${{ needs.ci.outputs.TAG }}
         PAT: ${{ secrets.SPANCOPY_WINGET_PAT }}
@@ -288,7 +287,6 @@ jobs:
           --submit
 
     - name: Upload manifest
-      if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-winget-manifest
