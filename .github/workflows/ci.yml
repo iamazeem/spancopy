@@ -267,30 +267,29 @@ jobs:
     steps:
     - name: Install wingetcreate
       run: |
-        wget https://aka.ms/wingetcreate/latest
+        curl -L https://aka.ms/wingetcreate/latest -o wingetcreate
+        chmod +x wingetcreate
         ./wingetcreate --version
 
-    - name: Update
-      env:
-        TAG: ${{ needs.ci.outputs.TAG }}
-        PAT: ${{ secrets.SPANCOPY_WINGET_PAT }}
-        PKG_ID: "iamAzeem.spancopy"
-      run: |
-        URL="https://github.com/iamazeem/spancopy/releases/download/v$TAG/spancopy-$TAG-amd64-windows.zip"
-        wingetcreate update \
-          --version "$TAG" \
-          --urls "$URL" \
-          --out "$GITHUB_WORKSPACE/manifests" \
-          # --token "$PAT" \
-          # --prtitle "New version: $PKG_ID v$TAG" \
-          # --submit \
-          "$PKG_ID"
+    # - name: Update
+    #   env:
+    #     TAG: ${{ needs.ci.outputs.TAG }}
+    #     PAT: ${{ secrets.SPANCOPY_WINGET_PAT }}
+    #     PKG_ID: "iamAzeem.spancopy"
+    #   run: |
+    #     URL="https://github.com/iamazeem/spancopy/releases/download/v$TAG/spancopy-$TAG-amd64-windows.zip"
+    #     wingetcreate update "$PKG_ID" \
+    #       --version "$TAG" \
+    #       --urls "$URL" \
+    #       --out "$GITHUB_WORKSPACE/manifests" \
+    #       --token "$PAT" \
+    #       --prtitle "New version: $PKG_ID v$TAG" \
+    #       --submit
 
-    - name: Upload manifest
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-winget-manifest
-        path: ${{ github.workspace }}/manifests
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
+    # - name: Upload manifest
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: spancopy-winget-manifest
+    #     path: ${{ github.workspace }}/manifests
+    #     retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+    #     if-no-files-found: error
