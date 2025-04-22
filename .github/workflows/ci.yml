@@ -266,7 +266,9 @@ jobs:
 
     steps:
     - name: Install wingetcreate
-      run: winget install wingetcreate
+      run: |
+        wget https://aka.ms/wingetcreate/latest
+        ./wingetcreate --version
 
     - name: Update
       env:
