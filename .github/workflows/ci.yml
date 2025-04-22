@@ -10,6 +10,9 @@ on:
   release:
     types: [published]
 
+env:
+  ARTIFACT_RETENTION_DAYS: 5
+
 jobs:
   version:
     runs-on: ubuntu-latest
@@ -65,8 +68,8 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    env:
-      ARTIFACT_RETENTION_DAYS: 5
+    outputs:
+      TAG: ${{ steps.tag.outputs.TAG }}
 
     steps:
     - name: Checkout
@@ -81,16 +84,15 @@ jobs:
         fetch-depth: '0'
 
     - name: Set TAG env var from VERSION in version file
+      id: tag
       run: |
         VERSION_FILE="./src/version.hpp"
         TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '"' | tr -d '\n')
         {
           echo "TAG=$TAG"
-        } | tee -a "$GITHUB_ENV"
+        } | tee -a "$GITHUB_ENV" "$GITHUB_OUTPUT"
 
     - name: Set up env vars
-      env:
-        TAG: ${{ env.TAG }}
       run: |
         AMD64_LINUX="spancopy-$TAG-amd64-linux"
         ARM64_LINUX="spancopy-$TAG-arm64-linux"
@@ -110,7 +112,7 @@ jobs:
             echo "$PREFIX_KEY=$PREFIX_VAL"
             echo "$PREFIX_TAR_KEY=$PREFIX_TAR_VAL"
             echo "$PREFIX_ZIP_KEY=$PREFIX_ZIP_VAL"
-          } | tee -a >>"$GITHUB_ENV"
+          } | tee -a "$GITHUB_ENV"
         done
 
     # --- Build ---
@@ -252,3 +254,41 @@ jobs:
           ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
           ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_TAR }}
           ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_ZIP }}
+
+  publish-winget-package:
+    # if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    needs: [ci]
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Install wingetcreate
+      run: winget install wingetcreate
+
+    - name: Update
+      env:
+        TAG: ${{ needs.ci.outputs.TAG }}
+        PAT: ${{ secrets.SPANCOPY_WINGET_PAT }}
+        PKG_ID: "iamAzeem.spancopy"
+      run: |
+        URL="https://github.com/iamazeem/spancopy/releases/download/v$TAG/spancopy-$TAG-amd64-windows.zip"
+        wingetcreate update \
+          --version "$TAG" \
+          --urls "$URL" \
+          --out "$GITHUB_WORKSPACE/manifests" \
+          # --token "$PAT" \
+          # --prtitle "New version: $PKG_ID v$TAG" \
+          # --submit \
+          "$PKG_ID"
+
+    - name: Upload manifest
+      uses: actions/upload-artifact@v4
+      with:
+        name: spancopy-winget-manifest
+        path: ${{ github.workspace }}/manifests
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+        if-no-files-found: error
+
