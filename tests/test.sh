@@ -2,7 +2,7 @@
 
 set -e
 
-BUILD_DIR=${BUILD_DIR:-build}
+PREFIX=${PREFIX:-build}
 
 SOURCE_DIR="./tests/source"
 EXPECTED_DEST_DIR="./tests/expected-destination"
@@ -14,10 +14,10 @@ mkdir -p $ACTUAL_DEST_DIR
 echo "[INF] running tests..."
 
 echo "[INF] test # 1: invalid threshold (failure)"
-"$BUILD_DIR"/spancopy --threshold 10 --source $SOURCE_DIR --destination $ACTUAL_DEST_DIR || true
+"$PREFIX"/spancopy --threshold 10 --source $SOURCE_DIR --destination $ACTUAL_DEST_DIR || true
 
 echo "[INF] test # 2: valid threshold (success)"
-"$BUILD_DIR"/spancopy --threshold 100 --source $SOURCE_DIR --destination $ACTUAL_DEST_DIR
+"$PREFIX"/spancopy --threshold 100 --source $SOURCE_DIR --destination $ACTUAL_DEST_DIR
 
 EXPECTED_DEST_SUBDIR=$(ls $EXPECTED_DEST_DIR | tr -d '\n')
 ACTUAL_DEST_SUBDIR=$(ls $ACTUAL_DEST_DIR | tr -d '\n')
