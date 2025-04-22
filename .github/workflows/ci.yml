@@ -10,12 +10,11 @@ on:
     paths-ignore:
     - '**.md'
   release:
-    branches: [main]
     types: [published]
 
 jobs:
   version:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
@@ -28,13 +27,13 @@ jobs:
     - name: Get tag if tagged/released and set TAG env var
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
-        TAG=$(echo $GITHUB_REF | cut -d '/' -f3)
-        echo "TAG: $TAG"
+        TAG="$GITHUB_REF_NAME"
         if [[ $TAG == "v"* ]]; then
           TAG="${TAG:1}"
         fi
-        echo "TAG: $TAG"
-        echo "TAG=$TAG" >> $GITHUB_ENV
+        {
+          echo "TAG=$TAG"
+        } | tee -a "$GITHUB_ENV"
 
     - name: Set TAG env var from tag if tagged/released and update VERSION in version file
       if: startsWith(github.ref, 'refs/tags/v')
@@ -59,12 +58,12 @@ jobs:
         fi
 
   ci:
-    needs: version
+    needs: [version]
 
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-20.04, macos-11]
+        os: [ubuntu-latest, macos-13]
 
     runs-on: ${{ matrix.os }}
 
@@ -87,8 +86,9 @@ jobs:
       run: |
         VERSION_FILE="./src/version.hpp"
         TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '"' | tr -d '\n')
-        echo "TAG: $TAG"
-        echo "TAG=$TAG" >> $GITHUB_ENV
+        {
+          echo "TAG=$TAG"
+        } | tee -a "$GITHUB_ENV"
 
     - name: Set up env vars
       env:
@@ -105,20 +105,21 @@ jobs:
           PREFIX_VAL="${!PREFIX}"
           PREFIX_TAR_KEY="${PREFIX_KEY}_TAR"
           PREFIX_TAR_VAL="${PREFIX_VAL}.tar.gz"
+          PREFIX_ZIP_KEY="${PREFIX_KEY}_ZIP"
+          PREFIX_ZIP_VAL="${PREFIX_VAL}.zip"
 
-          echo "$PREFIX_KEY: $PREFIX_VAL"
-          echo "$PREFIX_TAR_KEY: $PREFIX_TAR_VAL"
-
-          echo "$PREFIX_KEY=$PREFIX_VAL" >> $GITHUB_ENV
-          echo "$PREFIX_TAR_KEY=$PREFIX_TAR_VAL" >> $GITHUB_ENV
+          {
+            echo "$PREFIX_KEY=$PREFIX_VAL"
+            echo "$PREFIX_TAR_KEY=$PREFIX_TAR_VAL"
+            echo "$PREFIX_ZIP_KEY=$PREFIX_ZIP_VAL"
+          } | tee -a >>"$GITHUB_ENV"
         done
 
     # --- Build ---
 
     - name: Install Dependencies
       if: runner.os == 'Linux'
-      run: |
-        sudo apt install -y tree g++-mingw-w64 g++-aarch64-linux-gnu
+      run: sudo apt install -y tree g++-mingw-w64 g++-aarch64-linux-gnu
 
     - name: Build (${{ env.AMD64_LINUX_PREFIX }})
       if: runner.os == 'Linux'
@@ -127,6 +128,7 @@ jobs:
         STRIP: strip
         BUILD_DIR: ${{ env.AMD64_LINUX_PREFIX }}
         TAR: ${{ env.AMD64_LINUX_PREFIX_TAR }}
+        ZIP: ${{ env.AMD64_LINUX_PREFIX_ZIP }}
       run: |
         ./scripts/ci-build.sh
         ./tests/test.sh 
@@ -138,6 +140,7 @@ jobs:
         STRIP: aarch64-linux-gnu-strip
         BUILD_DIR: ${{ env.ARM64_LINUX_PREFIX }}
         TAR: ${{ env.ARM64_LINUX_PREFIX_TAR }}
+        ZIP: ${{ env.ARM64_LINUX_PREFIX_ZIP }}
       run: ./scripts/ci-build.sh
 
     - name: Build (${{ env.AMD64_WINDOWS_PREFIX }})
@@ -147,6 +150,7 @@ jobs:
         STRIP: x86_64-w64-mingw32-strip
         BUILD_DIR: ${{ env.AMD64_WINDOWS_PREFIX }}
         TAR: ${{ env.AMD64_WINDOWS_PREFIX_TAR }}
+        ZIP: ${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
       run: ./scripts/ci-build.sh
 
     - name: Build (${{ env.AMD64_MACOSX_PREFIX }})
@@ -156,6 +160,7 @@ jobs:
         STRIP: strip
         BUILD_DIR: ${{ env.AMD64_MACOSX_PREFIX }}
         TAR: ${{ env.AMD64_MACOSX_PREFIX_TAR }}
+        ZIP: ${{ env.AMD64_MACOSX_PREFIX_ZIP }}
       run: |
         ./scripts/ci-build.sh
         ./tests/test.sh 
@@ -171,12 +176,30 @@ jobs:
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
+    - name: Upload (${{ env.AMD64_LINUX_PREFIX_ZIP }})
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.AMD64_LINUX_PREFIX_ZIP }}
+        path: ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_ZIP }}
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+        if-no-files-found: error
+
     - name: Upload (${{ env.ARM64_LINUX_PREFIX_TAR }})
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.ARM64_LINUX_PREFIX_TAR }}
         path: ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_TAR }}
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+        if-no-files-found: error
+
+    - name: Upload (${{ env.ARM64_LINUX_PREFIX_ZIP }})
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ARM64_LINUX_PREFIX_ZIP }}
+        path: ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_ZIP }}
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
@@ -189,12 +212,30 @@ jobs:
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
+    - name: Upload (${{ env.AMD64_WINDOWS_PREFIX_ZIP }})
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
+        path: ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+        if-no-files-found: error
+
     - name: Upload (${{ env.AMD64_MACOSX_PREFIX_TAR }})
       if: runner.os == 'macOS'
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.AMD64_MACOSX_PREFIX_TAR }}
         path: ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_TAR }}
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+        if-no-files-found: error
+
+    - name: Upload (${{ env.AMD64_MACOSX_PREFIX_ZIP }})
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.AMD64_MACOSX_PREFIX_ZIP }}
+        path: ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_ZIP }}
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
@@ -206,6 +247,10 @@ jobs:
       with:
         files: |
           ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_TAR }}
+          ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_ZIP }}
           ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_TAR }}
+          ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_ZIP }}
           ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_TAR }}
+          ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
           ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_TAR }}
+          ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_ZIP }}

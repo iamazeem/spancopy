@@ -2,12 +2,12 @@
 
 set -e
 
-if [[ -z $BUILD_DIR || -z $TAR ]]; then
+if [[ -z $BUILD_DIR || -z $TAR || -z $ZIP ]]; then
   echo "[ERR] Set BUILD_DIR and TAR env vars!"
   exit 1
 fi
 
-CXX=${CXX:-gcc}
+CXX=${CXX:-g++}
 STRIP=${STRIP:-strip}
 
 echo "[INF] CXX:        $CXX"
@@ -24,6 +24,7 @@ $STRIP ./"$BUILD_DIR"/spancopy*
 echo "[INF] Compressing"
 cd ./"$BUILD_DIR"
 tar -czvf "$TAR" spancopy*
+zip -9 "$ZIP" spancopy*
 cd ..
 ls -Gghl ./"$BUILD_DIR"/spancopy*
 
