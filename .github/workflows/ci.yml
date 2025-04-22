@@ -18,7 +18,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       if: startsWith(github.ref, 'refs/tags/v')
       with:
         ref: main
@@ -72,11 +72,11 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     - name: Checkout on tag/release
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       if: startsWith(github.ref, 'refs/tags/v')
       with:
         ref: main
@@ -169,7 +169,7 @@ jobs:
 
     - name: Upload (${{ env.AMD64_LINUX_PREFIX_TAR }})
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.AMD64_LINUX_PREFIX_TAR }}
         path: ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_TAR }}
@@ -178,7 +178,7 @@ jobs:
 
     - name: Upload (${{ env.AMD64_LINUX_PREFIX_ZIP }})
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.AMD64_LINUX_PREFIX_ZIP }}
         path: ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_ZIP }}
@@ -187,7 +187,7 @@ jobs:
 
     - name: Upload (${{ env.ARM64_LINUX_PREFIX_TAR }})
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARM64_LINUX_PREFIX_TAR }}
         path: ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_TAR }}
@@ -196,7 +196,7 @@ jobs:
 
     - name: Upload (${{ env.ARM64_LINUX_PREFIX_ZIP }})
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARM64_LINUX_PREFIX_ZIP }}
         path: ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_ZIP }}
@@ -205,7 +205,7 @@ jobs:
 
     - name: Upload (${{ env.AMD64_WINDOWS_PREFIX_TAR }})
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.AMD64_WINDOWS_PREFIX_TAR }}
         path: ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_TAR }}
@@ -214,7 +214,7 @@ jobs:
 
     - name: Upload (${{ env.AMD64_WINDOWS_PREFIX_ZIP }})
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
         path: ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
@@ -223,7 +223,7 @@ jobs:
 
     - name: Upload (${{ env.AMD64_MACOSX_PREFIX_TAR }})
       if: runner.os == 'macOS'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.AMD64_MACOSX_PREFIX_TAR }}
         path: ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_TAR }}
@@ -232,7 +232,7 @@ jobs:
 
     - name: Upload (${{ env.AMD64_MACOSX_PREFIX_ZIP }})
       if: runner.os == 'macOS'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.AMD64_MACOSX_PREFIX_ZIP }}
         path: ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_ZIP }}
