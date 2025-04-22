@@ -124,7 +124,7 @@ jobs:
       env:
         CXX: g++
         STRIP: strip
-        BUILD_DIR: ${{ env.AMD64_LINUX_PREFIX }}
+        PREFIX: ${{ env.AMD64_LINUX_PREFIX }}
         TAR: ${{ env.AMD64_LINUX_PREFIX_TAR }}
         ZIP: ${{ env.AMD64_LINUX_PREFIX_ZIP }}
       run: |
@@ -136,7 +136,7 @@ jobs:
       env:
         CXX: aarch64-linux-gnu-g++
         STRIP: aarch64-linux-gnu-strip
-        BUILD_DIR: ${{ env.ARM64_LINUX_PREFIX }}
+        PREFIX: ${{ env.ARM64_LINUX_PREFIX }}
         TAR: ${{ env.ARM64_LINUX_PREFIX_TAR }}
         ZIP: ${{ env.ARM64_LINUX_PREFIX_ZIP }}
       run: ./scripts/ci-build.sh
@@ -146,7 +146,7 @@ jobs:
       env:
         CXX: x86_64-w64-mingw32-g++
         STRIP: x86_64-w64-mingw32-strip
-        BUILD_DIR: ${{ env.AMD64_WINDOWS_PREFIX }}
+        PREFIX: ${{ env.AMD64_WINDOWS_PREFIX }}
         TAR: ${{ env.AMD64_WINDOWS_PREFIX_TAR }}
         ZIP: ${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
       run: ./scripts/ci-build.sh
@@ -156,7 +156,7 @@ jobs:
       env:
         CXX: clang++
         STRIP: strip
-        BUILD_DIR: ${{ env.AMD64_MACOSX_PREFIX }}
+        PREFIX: ${{ env.AMD64_MACOSX_PREFIX }}
         TAR: ${{ env.AMD64_MACOSX_PREFIX_TAR }}
         ZIP: ${{ env.AMD64_MACOSX_PREFIX_ZIP }}
       run: |

@@ -2,8 +2,8 @@
 
 set -e
 
-if [[ -z $BUILD_DIR || -z $TAR || -z $ZIP ]]; then
-  echo "[ERR] Set BUILD_DIR and TAR env vars!"
+if [[ -z $PREFIX || -z $TAR || -z $ZIP ]]; then
+  echo "[ERR] Set PREFIX and TAR env vars!"
   exit 1
 fi
 
@@ -12,22 +12,25 @@ STRIP=${STRIP:-strip}
 
 echo "[INF] CXX:        $CXX"
 echo "[INF] STRIP:      $STRIP"
-echo "[INF] BUILD_DIR:  $BUILD_DIR"
+echo "[INF] PREFIX:     $PREFIX"
 echo "[INF] TAR:        $TAR"
 echo "[INF] ZIP:        $ZIP"
 
 echo "[INF] Building"
-rm -rf ./"$BUILD_DIR"
-cmake -S . -B "$BUILD_DIR"
-cmake --build "$BUILD_DIR"
-$STRIP ./"$BUILD_DIR"/spancopy*
+rm -rf ./"$PREFIX"
+cmake -S . -B "$PREFIX"
+cmake --build "$PREFIX"
+$STRIP ./"$PREFIX"/spancopy*
 
 echo "[INF] Compressing"
-cd ./"$BUILD_DIR"
-EXE=$(ls {spancopy,spancopy.exe} 2>/dev/null)
+cd ./"$PREFIX"
+EXE="spancopy"
+if [[ -f "spancopy.exe" ]]; then
+  EXE="spancopy.exe"
+fi
 tar -czvf "$TAR" "$EXE"
 zip "$ZIP" "$EXE"
 cd ..
-ls -Gghl ./"$BUILD_DIR"/spancopy*
+ls -Gghl ./"$PREFIX"/spancopy*
 
 echo "--- [DONE] ---"
