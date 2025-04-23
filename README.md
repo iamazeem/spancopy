@@ -25,14 +25,26 @@ See the [CI workflow](.github/workflows/ci.yml) for more details.
 Download the prebuilt binaries from the
 [Releases](https://github.com/iamazeem/spancopy/releases) page.
 
+## Install
+
+### Install: Windows (`winget`)
+
+```powershell
+# Install with alias
+winget.exe install spancopy
+
+# Install with id
+winget.exe install --id iamAzeem.spancopy
+```
+
 ## Usage
 
 Run `spancopy --help` for usage.
 
 ```text
-$ ./spancopy --help
+$ spancopy --help
 spancopy v0.0.1 - a CLI tool to span (copy) files with size threshold
-Usage: ./spancopy [OPTIONS]
+Usage: spancopy [OPTIONS]
 
 Options:
   -h,--help                   show help and exit
@@ -73,7 +85,7 @@ Examples:
   spancopy --threshold 100kb --source ./src --destination ./dst
 
 For any feedback or to report any issues, please open an issue on
-GitHub: https://github.com/iamazeem/spancopy
+GitHub: https://github.com/iamazeem/spancopy/issues
 
 Written by: AZEEM SAJID <azeem.sajid@gmail.com>
 

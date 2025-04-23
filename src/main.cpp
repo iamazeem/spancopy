@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         "  spancopy --threshold 100kb --source ./src --destination ./dst\n"
         "\n"
         "For any feedback or to report any issues, please open an issue on\n"
-        "GitHub: https://github.com/iamazeem/spancopy\n"
+        "GitHub: https://github.com/iamazeem/spancopy/issues\n"
         "\n"
         "Written by: AZEEM SAJID <azeem.sajid@gmail.com>\n"
     );
