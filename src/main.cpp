@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         "  spancopy --threshold 100kb --source ./src --destination ./dst\n"
         "\n"
         "For any feedback or to report any issues, please open an issue on\n"
-        "GitHub: https://github.com/iamazeem/spancopy\n"
+        "GitHub: https://github.com/iamazeem/spancopy/issues\n"
         "\n"
         "Written by: AZEEM SAJID <azeem.sajid@gmail.com>\n"
     );
@@ -69,16 +69,22 @@ int main(int argc, char** argv)
     {
         app.parse(argc, argv);
     }
-    catch (const CLI::Success& e)
+    catch (const CLI::CallForVersion& e)
     {
-        // -h,--help or -v,--version
-        app.exit(e);
-        return EXIT_SUCCESS;
+        return app.exit(e);
+    }
+    catch (const CLI::CallForHelp& e)
+    {
+        return app.exit(e);
     }
     catch (const CLI::ParseError& e)
     {
-        app.exit(e);
-        return EXIT_FAILURE;
+        if (argc == 1)
+        {
+            return app.exit(CLI::CallForHelp{});
+        }
+
+        return app.exit(e);
     }
 
     const spancopy::spanner spanner{threshold, source, destination};
