@@ -2,3 +2,8 @@
 build
 *.o
 *.txt
+
+amd64-*
+arm64-*
+artifacts
+.artifacts

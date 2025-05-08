@@ -11,22 +11,25 @@ on:
     types: [published]
 
 env:
+  ARTIFACT_DIR: .artifacts
   ARTIFACT_RETENTION_DAYS: 5
 
 jobs:
   version:
     runs-on: ubuntu-latest
 
+    outputs:
+      TAG: ${{ steps.tag.outputs.TAG }}
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      if: startsWith(github.ref, 'refs/tags/v')
       with:
         ref: main
-        fetch-depth: '0'
+        fetch-depth: ${{ startsWith(github.ref, 'refs/tags/v') && '0' || '1' }}
 
     - name: Get tag if tagged/released and set TAG env var
-      if: startsWith(github.ref, 'refs/tags/v')
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
       run: |
         TAG="$GITHUB_REF_NAME"
         if [[ $TAG == "v"* ]]; then
@@ -36,8 +39,8 @@ jobs:
           echo "TAG=$TAG"
         } | tee -a "$GITHUB_ENV"
 
-    - name: Set TAG env var from tag if tagged/released and update VERSION in version file
-      if: startsWith(github.ref, 'refs/tags/v')
+    - name: Update VERSION in version file and push
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
       run: |
         VERSION_FILE="./src/version.hpp"
         OLD_TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '"' | tr -d '\n')
@@ -58,202 +61,163 @@ jobs:
           echo "Version updated successfully!"
         fi
 
-  ci:
-    needs: [version]
-
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ubuntu-latest, macos-13]
-
-    runs-on: ${{ matrix.os }}
-
-    outputs:
-      TAG: ${{ steps.tag.outputs.TAG }}
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-
-    - name: Checkout on tag/release
-      uses: actions/checkout@v4
-      if: startsWith(github.ref, 'refs/tags/v')
-      with:
-        ref: main
-        fetch-depth: '0'
-
-    - name: Set TAG env var from VERSION in version file
+    - name: Set TAG output parameter
       id: tag
       run: |
         VERSION_FILE="./src/version.hpp"
         TAG=$(grep VERSION $VERSION_FILE | cut -d ' ' -f3 | tr -d '"' | tr -d '\n')
         {
           echo "TAG=$TAG"
-        } | tee -a "$GITHUB_ENV" "$GITHUB_OUTPUT"
+        } | tee -a "$GITHUB_OUTPUT"
 
-    - name: Set up env vars
-      run: |
-        AMD64_LINUX="spancopy-$TAG-amd64-linux"
-        ARM64_LINUX="spancopy-$TAG-arm64-linux"
-        AMD64_WINDOWS="spancopy-$TAG-amd64-windows"
-        AMD64_MACOSX="spancopy-$TAG-amd64-macosx"
+  ci:
+    needs: [version]
 
-        PREFIXES=(AMD64_LINUX ARM64_LINUX AMD64_WINDOWS AMD64_MACOSX)
-        for PREFIX in ${PREFIXES[*]}; do
-          PREFIX_KEY="${PREFIX}_PREFIX"
-          PREFIX_VAL="${!PREFIX}"
-          PREFIX_TAR_KEY="${PREFIX_KEY}_TAR"
-          PREFIX_TAR_VAL="${PREFIX_VAL}.tar.gz"
-          PREFIX_ZIP_KEY="${PREFIX_KEY}_ZIP"
-          PREFIX_ZIP_VAL="${PREFIX_VAL}.zip"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-13]
 
-          {
-            echo "$PREFIX_KEY=$PREFIX_VAL"
-            echo "$PREFIX_TAR_KEY=$PREFIX_TAR_VAL"
-            echo "$PREFIX_ZIP_KEY=$PREFIX_ZIP_VAL"
-          } | tee -a "$GITHUB_ENV"
-        done
+    runs-on: ${{ matrix.os }}
+
+    outputs:
+      TAG: ${{ needs.version.outputs.TAG }}
+
+    env:
+      TAG: ${{ needs.version.outputs.TAG }}
+      AMD64_LINUX: amd64-linux
+      ARM64_LINUX: arm64-linux
+      AMD64_WINDOWS: amd64-windows
+      AMD64_MACOSX: amd64-macosx
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ startsWith(github.ref, 'refs/tags/v') && 'main' || '' }}
 
     # --- Build ---
 
     - name: Install Dependencies
-      if: runner.os == 'Linux'
+      if: ${{ runner.os == 'Linux' }}
       run: sudo apt install -y tree g++-mingw-w64 g++-aarch64-linux-gnu
 
-    - name: Build (${{ env.AMD64_LINUX_PREFIX }})
-      if: runner.os == 'Linux'
+    - name: Build (${{ env.AMD64_LINUX }})
+      if: ${{ runner.os == 'Linux' }}
       env:
         CXX: g++
         STRIP: strip
-        PREFIX: ${{ env.AMD64_LINUX_PREFIX }}
-        TAR: ${{ env.AMD64_LINUX_PREFIX_TAR }}
-        ZIP: ${{ env.AMD64_LINUX_PREFIX_ZIP }}
+        PREFIX: ${{ env.AMD64_LINUX }}
       run: |
-        ./scripts/ci-build.sh
-        ./tests/test.sh 
+        ./scripts/ci-build.bash
+        ./tests/test.bash
 
-    - name: Build (${{ env.ARM64_LINUX_PREFIX }})
-      if: runner.os == 'Linux'
+    - name: Build (${{ env.ARM64_LINUX }})
+      if: ${{ runner.os == 'Linux' }}
       env:
         CXX: aarch64-linux-gnu-g++
         STRIP: aarch64-linux-gnu-strip
-        PREFIX: ${{ env.ARM64_LINUX_PREFIX }}
-        TAR: ${{ env.ARM64_LINUX_PREFIX_TAR }}
-        ZIP: ${{ env.ARM64_LINUX_PREFIX_ZIP }}
-      run: ./scripts/ci-build.sh
+        PREFIX: ${{ env.ARM64_LINUX }}
+      run: ./scripts/ci-build.bash
 
-    - name: Build (${{ env.AMD64_WINDOWS_PREFIX }})
-      if: runner.os == 'Linux'
+    - name: Build (${{ env.AMD64_WINDOWS }})
+      if: ${{ runner.os == 'Linux' }}
       env:
         CXX: x86_64-w64-mingw32-g++
         STRIP: x86_64-w64-mingw32-strip
-        PREFIX: ${{ env.AMD64_WINDOWS_PREFIX }}
-        TAR: ${{ env.AMD64_WINDOWS_PREFIX_TAR }}
-        ZIP: ${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
-      run: ./scripts/ci-build.sh
+        PREFIX: ${{ env.AMD64_WINDOWS }}
+      run: ./scripts/ci-build.bash
 
-    - name: Build (${{ env.AMD64_MACOSX_PREFIX }})
-      if: runner.os == 'macOS'
+    - name: Build (${{ env.AMD64_MACOSX }})
+      if: ${{ runner.os == 'macOS' }}
       env:
         CXX: clang++
         STRIP: strip
-        PREFIX: ${{ env.AMD64_MACOSX_PREFIX }}
-        TAR: ${{ env.AMD64_MACOSX_PREFIX_TAR }}
-        ZIP: ${{ env.AMD64_MACOSX_PREFIX_ZIP }}
+        PREFIX: ${{ env.AMD64_MACOSX }}
       run: |
-        ./scripts/ci-build.sh
-        ./tests/test.sh 
+        ./scripts/ci-build.bash
+        ./tests/test.bash
 
     # --- Upload ---
 
-    - name: Upload (${{ env.AMD64_LINUX_PREFIX_TAR }})
-      if: runner.os == 'Linux'
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.tar.gz)
+      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.AMD64_LINUX_PREFIX_TAR }}
-        path: ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_TAR }}
+        name: spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.tar.gz
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.tar.gz
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.AMD64_LINUX_PREFIX_ZIP }})
-      if: runner.os == 'Linux'
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.zip)
+      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.AMD64_LINUX_PREFIX_ZIP }}
-        path: ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_ZIP }}
+        name: spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.zip
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.zip
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.ARM64_LINUX_PREFIX_TAR }})
-      if: runner.os == 'Linux'
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.tar.gz)
+      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.ARM64_LINUX_PREFIX_TAR }}
-        path: ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_TAR }}
+        name: spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.tar.gz
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.tar.gz
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.ARM64_LINUX_PREFIX_ZIP }})
-      if: runner.os == 'Linux'
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.zip)
+      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.ARM64_LINUX_PREFIX_ZIP }}
-        path: ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_ZIP }}
+        name: spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.zip
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.zip
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.AMD64_WINDOWS_PREFIX_TAR }})
-      if: runner.os == 'Linux'
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.tar.gz)
+      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.AMD64_WINDOWS_PREFIX_TAR }}
-        path: ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_TAR }}
+        name: spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.tar.gz
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.tar.gz
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.AMD64_WINDOWS_PREFIX_ZIP }})
-      if: runner.os == 'Linux'
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.zip)
+      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
-        path: ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
+        name: spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.zip
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.zip
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.AMD64_MACOSX_PREFIX_TAR }})
-      if: runner.os == 'macOS'
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.tar.gz)
+      if: ${{ runner.os == 'macOS' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.AMD64_MACOSX_PREFIX_TAR }}
-        path: ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_TAR }}
+        name: spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.tar.gz
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.tar.gz
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (${{ env.AMD64_MACOSX_PREFIX_ZIP }})
-      if: runner.os == 'macOS'
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip)
+      if: ${{ runner.os == 'macOS' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.AMD64_MACOSX_PREFIX_ZIP }}
-        path: ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_ZIP }}
+        name: spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
     # --- Upload on tag/release ---
 
     - name: Upload release artifacts
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/v')
-      with:
-        files: |
-          ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_TAR }}
-          ${{ env.AMD64_LINUX_PREFIX }}/${{ env.AMD64_LINUX_PREFIX_ZIP }}
-          ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_TAR }}
-          ${{ env.ARM64_LINUX_PREFIX }}/${{ env.ARM64_LINUX_PREFIX_ZIP }}
-          ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_TAR }}
-          ${{ env.AMD64_WINDOWS_PREFIX }}/${{ env.AMD64_WINDOWS_PREFIX_ZIP }}
-          ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_TAR }}
-          ${{ env.AMD64_MACOSX_PREFIX }}/${{ env.AMD64_MACOSX_PREFIX_ZIP }}
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: ./scripts/ci-upload-release-artifacts.bash
 
   publish-winget-package:
     if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
