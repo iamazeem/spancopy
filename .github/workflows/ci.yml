@@ -181,6 +181,11 @@ jobs:
     strategy:
       matrix:
         os: [macos-13, macos-latest]
+        include:
+        - os: macos-13
+          prefix: amd64-macosx
+        - os: macos-latest
+          prefix: arm64-macosx
 
     runs-on: ${{ matrix.os }}
 
@@ -189,8 +194,7 @@ jobs:
 
     env:
       TAG: ${{ needs.version.outputs.TAG }}
-      AMD64_MACOSX: amd64-macosx
-      ARM64_MACOSX: arm64-macosx
+      PREFIX: ${{ matrix.prefix }}
 
     steps:
     - name: Checkout
@@ -198,63 +202,31 @@ jobs:
       with:
         ref: ${{ startsWith(github.ref, 'refs/tags/v') && 'main' || '' }}
 
-    # --- Build ---
-
-    - name: Build (${{ env.AMD64_MACOSX }})
+    - name: Build (${{ env.PREFIX }})
       if: ${{ runner.arch == 'X64' }}
       env:
         CXX: clang++
         STRIP: strip
-        PREFIX: ${{ env.AMD64_MACOSX }}
+        PREFIX: ${{ env.PREFIX }}
       run: |
         ./scripts/ci-build.bash
         ./tests/test.bash
 
-    - name: Build (${{ env.ARM64_MACOSX }})
-      if: ${{ runner.arch == 'ARM64' }}
-      env:
-        CXX: clang++
-        STRIP: strip
-        PREFIX: ${{ env.ARM64_MACOSX }}
-      run: |
-        ./scripts/ci-build.bash
-        ./tests/test.bash
-
-    # --- Upload ---
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.tar.gz)
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.PREFIX }}.tar.gz)
       if: ${{ runner.arch == 'X64' }}
       uses: actions/upload-artifact@v4
       with:
-        name: spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.tar.gz
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.tar.gz
+        name: spancopy-${{ env.TAG }}-${{ env.PREFIX }}.tar.gz
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.PREFIX }}.tar.gz
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip)
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.PREFIX }}.zip)
       if: ${{ runner.arch == 'X64' }}
       uses: actions/upload-artifact@v4
       with:
-        name: spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.tar.gz)
-      if: ${{ runner.arch == 'ARM64' }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.tar.gz
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.tar.gz
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.zip)
-      if: ${{ runner.arch == 'ARM64' }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.zip
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.zip
+        name: spancopy-${{ env.TAG }}-${{ env.PREFIX }}.zip
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.PREFIX }}.zip
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
