@@ -2,6 +2,11 @@
 
 set -e
 
+if [[ $TESTS != true ]]; then
+  echo "[INF] TESTS not set to true, skipping tests."
+  exit 0
+fi
+
 PREFIX=${PREFIX:-build}
 
 SOURCE_DIR="./tests/source"
