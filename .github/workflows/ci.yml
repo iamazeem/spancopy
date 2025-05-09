@@ -70,14 +70,9 @@ jobs:
           echo "TAG=$TAG"
         } | tee -a "$GITHUB_OUTPUT"
 
-  ci:
+  ci-linux:
     needs: [version]
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-13]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     outputs:
       TAG: ${{ needs.version.outputs.TAG }}
@@ -87,7 +82,6 @@ jobs:
       AMD64_LINUX: amd64-linux
       ARM64_LINUX: arm64-linux
       AMD64_WINDOWS: amd64-windows
-      AMD64_MACOSX: amd64-macosx
 
     steps:
     - name: Checkout
@@ -98,11 +92,9 @@ jobs:
     # --- Build ---
 
     - name: Install Dependencies
-      if: ${{ runner.os == 'Linux' }}
       run: sudo apt install -y tree g++-mingw-w64 g++-aarch64-linux-gnu
 
     - name: Build (${{ env.AMD64_LINUX }})
-      if: ${{ runner.os == 'Linux' }}
       env:
         CXX: g++
         STRIP: strip
@@ -112,7 +104,6 @@ jobs:
         ./tests/test.bash
 
     - name: Build (${{ env.ARM64_LINUX }})
-      if: ${{ runner.os == 'Linux' }}
       env:
         CXX: aarch64-linux-gnu-g++
         STRIP: aarch64-linux-gnu-strip
@@ -120,27 +111,15 @@ jobs:
       run: ./scripts/ci-build.bash
 
     - name: Build (${{ env.AMD64_WINDOWS }})
-      if: ${{ runner.os == 'Linux' }}
       env:
         CXX: x86_64-w64-mingw32-g++
         STRIP: x86_64-w64-mingw32-strip
         PREFIX: ${{ env.AMD64_WINDOWS }}
       run: ./scripts/ci-build.bash
 
-    - name: Build (${{ env.AMD64_MACOSX }})
-      if: ${{ runner.os == 'macOS' }}
-      env:
-        CXX: clang++
-        STRIP: strip
-        PREFIX: ${{ env.AMD64_MACOSX }}
-      run: |
-        ./scripts/ci-build.bash
-        ./tests/test.bash
-
     # --- Upload ---
 
     - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.tar.gz)
-      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.tar.gz
@@ -149,7 +128,6 @@ jobs:
         if-no-files-found: error
 
     - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.zip)
-      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.zip
@@ -158,7 +136,6 @@ jobs:
         if-no-files-found: error
 
     - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.tar.gz)
-      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.tar.gz
@@ -167,7 +144,6 @@ jobs:
         if-no-files-found: error
 
     - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.zip)
-      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.zip
@@ -176,7 +152,6 @@ jobs:
         if-no-files-found: error
 
     - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.tar.gz)
-      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.tar.gz
@@ -185,7 +160,6 @@ jobs:
         if-no-files-found: error
 
     - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.zip)
-      if: ${{ runner.os == 'Linux' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.zip
@@ -193,8 +167,63 @@ jobs:
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
+    # --- Upload on tag/release ---
+
+    - name: Upload release artifacts
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: ./scripts/ci-upload-release-artifacts.bash
+
+  ci-macos:
+    needs: [version]
+
+    strategy:
+      matrix:
+        os: [macos-13, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    outputs:
+      TAG: ${{ needs.version.outputs.TAG }}
+
+    env:
+      TAG: ${{ needs.version.outputs.TAG }}
+      AMD64_MACOSX: amd64-macosx
+      ARM64_MACOSX: arm64-macosx
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ startsWith(github.ref, 'refs/tags/v') && 'main' || '' }}
+
+    # --- Build ---
+
+    - name: Build (${{ env.AMD64_MACOSX }})
+      if: ${{ runner.arch == 'X64' }}
+      env:
+        CXX: clang++
+        STRIP: strip
+        PREFIX: ${{ env.AMD64_MACOSX }}
+      run: |
+        ./scripts/ci-build.bash
+        ./tests/test.bash
+
+    - name: Build (${{ env.ARM64_MACOSX }})
+      if: ${{ runner.arch == 'ARM64' }}
+      env:
+        CXX: clang++
+        STRIP: strip
+        PREFIX: ${{ env.ARM64_MACOSX }}
+      run: |
+        ./scripts/ci-build.bash
+        ./tests/test.bash
+
+    # --- Upload ---
+
     - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.tar.gz)
-      if: ${{ runner.os == 'macOS' }}
+      if: ${{ runner.arch == 'X64' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.tar.gz
@@ -203,11 +232,29 @@ jobs:
         if-no-files-found: error
 
     - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip)
-      if: ${{ runner.os == 'macOS' }}
+      if: ${{ runner.arch == 'X64' }}
       uses: actions/upload-artifact@v4
       with:
         name: spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip
         path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_MACOSX }}.zip
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+        if-no-files-found: error
+
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.tar.gz)
+      if: ${{ runner.arch == 'ARM64' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.tar.gz
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.tar.gz
+        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+        if-no-files-found: error
+
+    - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.zip)
+      if: ${{ runner.arch == 'ARM64' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.zip
+        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.ARM64_MACOSX }}.zip
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
@@ -221,7 +268,7 @@ jobs:
 
   publish-winget-package:
     if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
-    needs: [ci]
+    needs: [ci-linux]
     runs-on: windows-latest
 
     defaults:
