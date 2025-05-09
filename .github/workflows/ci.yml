@@ -70,117 +70,27 @@ jobs:
           echo "TAG=$TAG"
         } | tee -a "$GITHUB_OUTPUT"
 
-  ci-linux:
-    needs: [version]
-    runs-on: ubuntu-latest
-
-    outputs:
-      TAG: ${{ needs.version.outputs.TAG }}
-
-    env:
-      TAG: ${{ needs.version.outputs.TAG }}
-      AMD64_LINUX: amd64-linux
-      ARM64_LINUX: arm64-linux
-      AMD64_WINDOWS: amd64-windows
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ startsWith(github.ref, 'refs/tags/v') && 'main' || '' }}
-
-    # --- Build ---
-
-    - name: Install Dependencies
-      run: sudo apt install -y tree g++-mingw-w64 g++-aarch64-linux-gnu
-
-    - name: Build (${{ env.AMD64_LINUX }})
-      env:
-        CXX: g++
-        STRIP: strip
-        PREFIX: ${{ env.AMD64_LINUX }}
-      run: |
-        ./scripts/ci-build.bash
-        ./tests/test.bash
-
-    - name: Build (${{ env.ARM64_LINUX }})
-      env:
-        CXX: aarch64-linux-gnu-g++
-        STRIP: aarch64-linux-gnu-strip
-        PREFIX: ${{ env.ARM64_LINUX }}
-      run: ./scripts/ci-build.bash
-
-    - name: Build (${{ env.AMD64_WINDOWS }})
-      env:
-        CXX: x86_64-w64-mingw32-g++
-        STRIP: x86_64-w64-mingw32-strip
-        PREFIX: ${{ env.AMD64_WINDOWS }}
-      run: ./scripts/ci-build.bash
-
-    # --- Upload ---
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.tar.gz)
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.tar.gz
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.tar.gz
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.zip)
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.zip
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_LINUX }}.zip
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.tar.gz)
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.tar.gz
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.tar.gz
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.zip)
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.zip
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.ARM64_LINUX }}.zip
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.tar.gz)
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.tar.gz
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.tar.gz
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
-    - name: Upload (spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.zip)
-      uses: actions/upload-artifact@v4
-      with:
-        name: spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.zip
-        path: ${{ env.ARTIFACT_DIR }}/spancopy-${{ env.TAG }}-${{ env.AMD64_WINDOWS }}.zip
-        retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-        if-no-files-found: error
-
-    # --- Upload on tag/release ---
-
-    - name: Upload release artifacts
-      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./scripts/ci-upload-release-artifacts.bash
-
-  ci-macos:
+  ci:
     needs: [version]
 
     strategy:
       matrix:
         config:
+        - os: ubuntu-latest
+          prefix: amd64-linux
+          cxx: g++
+          strip: strip
+          tests: true
+        - os: ubuntu-latest
+          prefix: arm64-linux
+          cxx: aarch64-linux-gnu-g++
+          strip: aarch64-linux-gnu-strip
+          tests: false
+        - os: ubuntu-latest
+          prefix: amd64-windows
+          cxx: x86_64-w64-mingw32-g++
+          strip: x86_64-w64-mingw32-strip
+          tests: false
         - os: macos-13
           prefix: amd64-macosx
           cxx: clang++
@@ -209,10 +119,19 @@ jobs:
       with:
         ref: ${{ startsWith(github.ref, 'refs/tags/v') && 'main' || '' }}
 
+    - name: Install dependencies (ARM64 Linux | AMD64 Windows)
+      if: ${{ env.PREFIX == 'arm64-linux' || env.PREFIX == 'amd64-windows' }}
+      env:
+        ARM64_LINUX: ${{ env.PREFIX == 'arm64-linux' && 'g++-aarch64-linux-gnu' || '' }}
+        AMD64_WINDOWS: ${{ env.PREFIX == 'amd64-windows' && 'g++-mingw-w64' || '' }}
+      run: sudo apt install -y $ARM64_LINUX $AMD64_WINDOWS
+
     - name: Build (${{ env.PREFIX }})
-      run: |
-        ./scripts/ci-build.bash
-        ./tests/test.bash
+      run: ./scripts/ci-build.bash
+
+    - name: Test (${{ env.PREFIX }})
+      if: ${{ env.TESTS == 'true' }}
+      run: ./tests/test.bash
 
     - name: Upload (${{ env.TAR }})
       uses: actions/upload-artifact@v4
@@ -238,7 +157,7 @@ jobs:
 
   publish-winget-package:
     if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
-    needs: [ci-linux]
+    needs: [version, ci]
     runs-on: windows-latest
 
     defaults:
@@ -254,7 +173,7 @@ jobs:
 
     - name: Update
       env:
-        TAG: ${{ needs.ci.outputs.TAG }}
+        TAG: ${{ needs.version.outputs.TAG }}
         PAT: ${{ secrets.SPANCOPY_WINGET_PAT }}
         PKG_ID: "iamAzeem.spancopy"
       run: |
