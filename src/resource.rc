@@ -13,6 +13,10 @@ BEGIN
     BEGIN
         BLOCK "040904E4"
         BEGIN
+            VALUE "FileDescription",  "spancopy - a CLI tool to span (copy) files with size threshold"
+            VALUE "FileVersion",      VERSION
+            VALUE "InternalName",     "spancopy"
+            VALUE "OriginalFilename", "spancopy.exe"
             VALUE "ProductName",      "spancopy"
             VALUE "ProductVersion",   VERSION
         END
