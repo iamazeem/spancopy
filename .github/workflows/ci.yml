@@ -201,8 +201,8 @@ jobs:
 
     env:
       TAG: ${{ needs.version.outputs.TAG }}
-      AMD64_ZIP: spancopy_${{ needs.version.outputs.TAG }}_amd64-linux.zip
-      ARM64_ZIP: spancopy_${{ needs.version.outputs.TAG }}_arm64-linux.zip
+      AMD64_ZIP: spancopy-${{ needs.version.outputs.TAG }}-amd64-linux.zip
+      ARM64_ZIP: spancopy-${{ needs.version.outputs.TAG }}-arm64-linux.zip
 
     steps:
     - name: Checkout .fpm config file
