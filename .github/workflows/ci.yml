@@ -195,7 +195,7 @@ jobs:
         if-no-files-found: error
 
   prepare-linux-packages:
-    # if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
     needs: [version, ci]
     runs-on: ubuntu-latest
 
@@ -303,7 +303,7 @@ jobs:
         path: packages
 
   publish-linux-packages:
-    # if: ${{ github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/v') }}
     needs: [prepare-linux-packages]
     runs-on: ubuntu-latest
 
