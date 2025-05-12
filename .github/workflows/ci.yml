@@ -229,15 +229,15 @@ jobs:
           --architecture "amd64" \
           --version "$TAG" \
           "spancopy-$TAG-amd64-linux.zip"
-        dpkg --info "spancopy_$TAG_amd64.deb"
-        dpkg --contents "spancopy_$TAG_amd64.deb"
+        dpkg --info ./"spancopy_$TAG_amd64.deb"
+        dpkg --contents ./"spancopy_$TAG_amd64.deb"
         fpm \
           --fpm-options-file ../.fpm \
           --architecture arm64 \
           --version "$TAG" \
           "spancopy-$TAG-arm64-linux.zip"
-        dpkg --info "spancopy_$TAG_arm64.deb"
-        dpkg --contents "spancopy_$TAG_arm64.deb"
+        dpkg --info ./"spancopy_$TAG_arm64.deb"
+        dpkg --contents ./"spancopy_$TAG_arm64.deb"
         ls -hl *.deb
 
     - name: Build RPM packages
@@ -250,14 +250,14 @@ jobs:
           --architecture amd64 \
           --version "$TAG" \
           "spancopy-$TAG-amd64-linux.zip"
-        rpm -qip "spancopy-$TAG-1.x86_64.rpm"
-        rpm -qlp "spancopy-$TAG-1.x86_64.rpm"
+        rpm -qip ./"spancopy-$TAG-1.x86_64.rpm"
+        rpm -qlp ./"spancopy-$TAG-1.x86_64.rpm"
         fpm \
           --fpm-options-file ../.fpm \
           --output-type rpm \
           --architecture arm64 \
           --version "$TAG" \
           "spancopy-$TAG-arm64-linux.zip"
-        rpm -qip "spancopy-$TAG-1.aarch64.rpm"
-        rpm -qlp "spancopy-$TAG-1.aarch64.rpm"
+        rpm -qip ./"spancopy-$TAG-1.aarch64.rpm"
+        rpm -qlp ./"spancopy-$TAG-1.aarch64.rpm"
         ls -hl *.rpm
