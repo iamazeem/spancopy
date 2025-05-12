@@ -11,7 +11,7 @@
     <h2>APT Repository</h2>
     <p>Add to <code>/etc/apt/sources.list.d/spancopy.list</code>:</p>
     <code>
-        deb [trusted=yes] https://iamazeem.github.io/spancopy/packages/apt/\$(dpkg --print-architecture)/ ./
+        deb [trusted=yes] https://iamazeem.github.io/spancopy/apt/\$(dpkg --print-architecture)/ ./
     </code>
 
     <h2>RPM Repository</h2>
@@ -19,7 +19,7 @@
     <code>
         [spancopy]
         name=SpanCopy Repository
-        baseurl=https://iamazeem.github.io/spancopy/packages/rpm/\$basearch
+        baseurl=https://iamazeem.github.io/spancopy/rpm/\$basearch
         enabled=1
         gpgcheck=0
     </code>
