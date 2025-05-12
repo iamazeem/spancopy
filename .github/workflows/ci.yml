@@ -294,7 +294,6 @@ jobs:
       run: |
         for ARCH in amd64 arm64; do
           createrepo_c packages/rpm/"$ARCH"
-          cd -
         done
 
     - name: Upload GitHub Pages artifacts
