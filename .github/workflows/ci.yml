@@ -201,6 +201,8 @@ jobs:
 
     env:
       TAG: ${{ needs.version.outputs.TAG }}
+      AMD64_ZIP: spancopy_${{ needs.version.outputs.TAG }}_amd64-linux.zip
+      ARM64_ZIP: spancopy_${{ needs.version.outputs.TAG }}_arm64-linux.zip
 
     steps:
     - name: Checkout .fpm config file
@@ -221,6 +223,9 @@ jobs:
         sudo gem install --no-document fpm
 
     - name: Build DEB packages
+      env:
+        AMD64_DEB: spancopy_${{ env.TAG }}_amd64.deb
+        ARM64_DEB: spancopy_${{ env.TAG }}_arm64.deb
       run: |
         cd "$ARTIFACT_DIR"
         ls -hl *.zip
@@ -228,36 +233,39 @@ jobs:
           --fpm-options-file ../.fpm \
           --architecture "amd64" \
           --version "$TAG" \
-          "spancopy-$TAG-amd64-linux.zip"
-        dpkg --info ./"spancopy_$TAG_amd64.deb"
-        dpkg --contents ./"spancopy_$TAG_amd64.deb"
+          "$AMD64_ZIP"
+        dpkg --info "$AMD64_DEB"
+        dpkg --contents "$AMD64_DEB"
         fpm \
           --fpm-options-file ../.fpm \
-          --architecture arm64 \
+          --architecture "arm64" \
           --version "$TAG" \
-          "spancopy-$TAG-arm64-linux.zip"
-        dpkg --info ./"spancopy_$TAG_arm64.deb"
-        dpkg --contents ./"spancopy_$TAG_arm64.deb"
+          "$ARM64_ZIP"
+        dpkg --info "$ARM64_DEB"
+        dpkg --contents "$ARM64_DEB"
         ls -hl *.deb
 
     - name: Build RPM packages
+      env:
+        AMD64_RPM: spancopy-${{ env.TAG }}-1.x86_64.rpm
+        ARM64_RPM: spancopy-${{ env.TAG }}-1.aarch64.rpm
       run: |
         cd "$ARTIFACT_DIR"
         ls -hl *.zip
         fpm \
           --fpm-options-file ../.fpm \
           --output-type rpm \
-          --architecture amd64 \
+          --architecture "amd64" \
           --version "$TAG" \
-          "spancopy-$TAG-amd64-linux.zip"
-        rpm -qip ./"spancopy-$TAG-1.x86_64.rpm"
-        rpm -qlp ./"spancopy-$TAG-1.x86_64.rpm"
+          "$AMD64_ZIP"
+        rpm -qip "$AMD64_RPM"
+        rpm -qlp "$AMD64_RPM"
         fpm \
           --fpm-options-file ../.fpm \
           --output-type rpm \
-          --architecture arm64 \
+          --architecture "arm64" \
           --version "$TAG" \
-          "spancopy-$TAG-arm64-linux.zip"
-        rpm -qip ./"spancopy-$TAG-1.aarch64.rpm"
-        rpm -qlp ./"spancopy-$TAG-1.aarch64.rpm"
+          "$ARM64_ZIP"
+        rpm -qip "$ARM64_RPM"
+        rpm -qlp "$ARM64_RPM"
         ls -hl *.rpm
