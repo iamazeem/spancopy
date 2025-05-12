@@ -14,6 +14,10 @@ env:
   ARTIFACT_DIR: .artifacts
   ARTIFACT_RETENTION_DAYS: 5
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   version:
     runs-on: ubuntu-latest
@@ -160,10 +164,6 @@ jobs:
     needs: [version, ci]
     runs-on: windows-latest
 
-    defaults:
-      run:
-        shell: bash
-
     steps:
     - name: Install wingetcreate
       run: |
@@ -193,3 +193,21 @@ jobs:
         path: ${{ github.workspace }}/manifests
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
+
+  publish-linux-packages:
+    # if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    needs: [version, ci]
+    runs-on: ubuntu-latest
+
+    env:
+      TAG: ${{ needs.version.outputs.TAG }}
+      AMD64_LINUX_ZIP: spancopy-${{ needs.version.outputs.TAG }}-amd64-linux.zip
+
+    steps:
+    - name: Download ZIP artifact (${{ env.AMD64_LINUX_ZIP }})
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.AMD64_LINUX_ZIP }}
+
+    - name: Check
+      run: ls -hl
