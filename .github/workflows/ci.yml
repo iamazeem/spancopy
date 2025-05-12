@@ -201,13 +201,13 @@ jobs:
 
     env:
       TAG: ${{ needs.version.outputs.TAG }}
-      AMD64_LINUX_ZIP: spancopy-${{ needs.version.outputs.TAG }}-amd64-linux.zip
 
     steps:
-    - name: Download ZIP artifact (${{ env.AMD64_LINUX_ZIP }})
+    - name: Download ZIP artifacts
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.AMD64_LINUX_ZIP }}
+        name: spancopy-${{ env.TAG }}-*-linux.zip
+        merge-multiple: true
 
     - name: Check
       run: ls -hl
