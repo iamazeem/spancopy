@@ -90,21 +90,21 @@ jobs:
           cxx: aarch64-linux-gnu-g++
           strip: aarch64-linux-gnu-strip
           tests: false
-        # - os: ubuntu-latest
-        #   prefix: amd64-windows
-        #   cxx: x86_64-w64-mingw32-g++
-        #   strip: x86_64-w64-mingw32-strip
-        #   tests: false
-        # - os: macos-13
-        #   prefix: amd64-macosx
-        #   cxx: clang++
-        #   strip: strip
-        #   tests: true
-        # - os: macos-latest
-        #   prefix: arm64-macosx
-        #   cxx: clang++
-        #   strip: strip
-        #   tests: true
+        - os: ubuntu-latest
+          prefix: amd64-windows
+          cxx: x86_64-w64-mingw32-g++
+          strip: x86_64-w64-mingw32-strip
+          tests: false
+        - os: macos-13
+          prefix: amd64-macosx
+          cxx: clang++
+          strip: strip
+          tests: true
+        - os: macos-latest
+          prefix: arm64-macosx
+          cxx: clang++
+          strip: strip
+          tests: true
 
     runs-on: ${{ matrix.config.os }}
 
