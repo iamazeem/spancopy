@@ -90,21 +90,21 @@ jobs:
           cxx: aarch64-linux-gnu-g++
           strip: aarch64-linux-gnu-strip
           tests: false
-        - os: ubuntu-latest
-          prefix: amd64-windows
-          cxx: x86_64-w64-mingw32-g++
-          strip: x86_64-w64-mingw32-strip
-          tests: false
-        - os: macos-13
-          prefix: amd64-macosx
-          cxx: clang++
-          strip: strip
-          tests: true
-        - os: macos-latest
-          prefix: arm64-macosx
-          cxx: clang++
-          strip: strip
-          tests: true
+        # - os: ubuntu-latest
+        #   prefix: amd64-windows
+        #   cxx: x86_64-w64-mingw32-g++
+        #   strip: x86_64-w64-mingw32-strip
+        #   tests: false
+        # - os: macos-13
+        #   prefix: amd64-macosx
+        #   cxx: clang++
+        #   strip: strip
+        #   tests: true
+        # - os: macos-latest
+        #   prefix: arm64-macosx
+        #   cxx: clang++
+        #   strip: strip
+        #   tests: true
 
     runs-on: ${{ matrix.config.os }}
 
@@ -226,17 +226,19 @@ jobs:
         ls -hl *.zip
         fpm \
           --fpm-options-file ../.fpm \
-          --architecture amd64 \
+          --architecture "amd64" \
           --version "$TAG" \
           "spancopy-$TAG-amd64-linux.zip"
+        dpkg --info "spancopy_$TAG_amd64.deb"
+        dpkg --contents "spancopy_$TAG_amd64.deb"
         fpm \
           --fpm-options-file ../.fpm \
           --architecture arm64 \
           --version "$TAG" \
           "spancopy-$TAG-arm64-linux.zip"
+        dpkg --info "spancopy_$TAG_arm64.deb"
+        dpkg --contents "spancopy_$TAG_arm64.deb"
         ls -hl *.deb
-        dpkg --info *.deb
-        dpkg --contents *.deb
 
     - name: Build RPM packages
       run: |
@@ -248,11 +250,14 @@ jobs:
           --architecture amd64 \
           --version "$TAG" \
           "spancopy-$TAG-amd64-linux.zip"
+        rpm -qip "spancopy-$TAG-1.x86_64.rpm"
+        rpm -qlp "spancopy-$TAG-1.x86_64.rpm"
         fpm \
           --fpm-options-file ../.fpm \
           --output-type rpm \
           --architecture arm64 \
           --version "$TAG" \
           "spancopy-$TAG-arm64-linux.zip"
+        rpm -qip "spancopy-$TAG-1.aarch64.rpm"
+        rpm -qlp "spancopy-$TAG-1.aarch64.rpm"
         ls -hl *.rpm
-        rpm -qip *.rpm

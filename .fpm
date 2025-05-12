@@ -7,3 +7,4 @@
 --maintainer "Azeem Sajid <azeem.sajid@gmail.com>"
 --url "https://github.com/iamazeem/spancopy"
 --license "MIT"
+--prefix "/usr/local/bin"
