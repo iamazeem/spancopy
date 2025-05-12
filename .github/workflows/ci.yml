@@ -203,6 +203,10 @@ jobs:
       TAG: ${{ needs.version.outputs.TAG }}
       AMD64_ZIP: spancopy-${{ needs.version.outputs.TAG }}-amd64-linux.zip
       ARM64_ZIP: spancopy-${{ needs.version.outputs.TAG }}-arm64-linux.zip
+      AMD64_DEB: spancopy_${{ needs.version.outputs.TAG }}_amd64.deb
+      ARM64_DEB: spancopy_${{ needs.version.outputs.TAG }}_arm64.deb
+      AMD64_RPM: spancopy-${{ needs.version.outputs.TAG }}-1.x86_64.rpm
+      ARM64_RPM: spancopy-${{ needs.version.outputs.TAG }}-1.aarch64.rpm
 
     steps:
     - name: Checkout .fpm config file
@@ -223,9 +227,6 @@ jobs:
         sudo gem install --no-document fpm
 
     - name: Build DEB packages
-      env:
-        AMD64_DEB: spancopy_${{ env.TAG }}_amd64.deb
-        ARM64_DEB: spancopy_${{ env.TAG }}_arm64.deb
       run: |
         cd "$ARTIFACT_DIR"
         ls -hl *.zip
@@ -246,9 +247,6 @@ jobs:
         ls -hl *.deb
 
     - name: Build RPM packages
-      env:
-        AMD64_RPM: spancopy-${{ env.TAG }}-1.x86_64.rpm
-        ARM64_RPM: spancopy-${{ env.TAG }}-1.aarch64.rpm
       run: |
         cd "$ARTIFACT_DIR"
         ls -hl *.zip
