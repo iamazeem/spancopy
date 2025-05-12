@@ -206,8 +206,9 @@ jobs:
     - name: Download ZIP artifacts
       uses: actions/download-artifact@v4
       with:
-        name: spancopy-${{ env.TAG }}-*-linux.zip
+        pattern: spancopy-${{ env.TAG }}-*-linux.zip
+        path: ${{ github.workspace }}/.artifacts
         merge-multiple: true
 
     - name: Check
-      run: ls -hl
+      run: ls -hl .artifacts
