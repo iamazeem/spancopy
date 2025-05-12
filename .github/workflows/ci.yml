@@ -194,7 +194,7 @@ jobs:
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
 
-  publish-linux-packages:
+  prepare-linux-packages:
     # if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
     needs: [version, ci]
     runs-on: ubuntu-latest
@@ -212,7 +212,9 @@ jobs:
     - name: Checkout .fpm config file
       uses: actions/checkout@v4
       with:
-        sparse-checkout: .fpm
+        sparse-checkout: |
+          .fpm
+          packages
 
     - name: Download ZIP artifacts
       uses: actions/download-artifact@v4
@@ -223,7 +225,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt install -y rpm
+        sudo apt update
+        sudo apt install -y rpm dpkg-dev createrepo-c
         sudo gem install --no-document fpm
 
     - name: Build DEB packages
@@ -267,3 +270,53 @@ jobs:
         rpm -qip "$ARM64_RPM"
         rpm -qlp "$ARM64_RPM"
         ls -hl *.rpm
+
+    - name: Move deb and rpm files to packages directory
+      run: |
+        mkdir -p packages/{apt,rpm}/{amd64,arm64}
+        mv "$ARTIFACT_DIR/$AMD64_DEB" packages/apt/amd64/
+        mv "$ARTIFACT_DIR/$ARM64_DEB" packages/apt/arm64/
+        mv "$ARTIFACT_DIR/$AMD64_RPM" packages/rpm/amd64/
+        mv "$ARTIFACT_DIR/$ARM64_RPM" packages/rpm/arm64/
+        ls -hl packages/{apt,rpm}/{amd64,arm64}
+
+    - name: Update APT repository
+      run: |
+        for ARCH in amd64 arm64; do
+          cd packages/apt/"$ARCH"
+          dpkg-scanpackages . /dev/null > Packages
+          gzip -k -f Packages
+          apt-ftparchive release . > Release
+        done
+
+    - name: Update RPM repository
+      run: |
+        for ARCH in amd64 arm64; do
+          createrepo_c packages/rpm/"$ARCH"
+        done
+
+    - name: Upload GitHub Pages artifacts
+      uses: actions/upload-pages-artifact@v3
+      with:
+        name: packages
+        path: packages
+
+  publish-linux-packages:
+    # if: ${{ github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/v') }}
+    needs: [prepare-linux-packages]
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}/packages
+
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      with:
+        artifact_name: packages
