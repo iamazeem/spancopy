@@ -1,0 +1,9 @@
+--input-type zip
+--output-type deb
+--name "spancopy"
+--version "0.0.0"
+--architecture "amd64"
+--description "a CLI tool to span (copy) files with size threshold"
+--maintainer "Azeem Sajid <azeem.sajid@gmail.com>"
+--url "https://github.com/iamazeem/spancopy"
+--license "MIT"

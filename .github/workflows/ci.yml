@@ -203,12 +203,35 @@ jobs:
       TAG: ${{ needs.version.outputs.TAG }}
 
     steps:
+    - name: Checkout .fpm config file
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: .fpm
+
     - name: Download ZIP artifacts
       uses: actions/download-artifact@v4
       with:
         pattern: spancopy-${{ env.TAG }}-*-linux.zip
-        path: ${{ github.workspace }}/.artifacts
+        path: ${{ env.ARTIFACT_DIR }}
         merge-multiple: true
 
-    - name: Check
-      run: ls -hl .artifacts
+    - name: Install dependencies
+      run: sudo gem install --no-document fpm
+
+    - name: Build DEB packages
+      run: |
+        cd "$ARTIFACT_DIR"
+        ls -hl *.zip
+        fpm \
+          --fpm-options-file ../.fpm \
+          --architecture amd64 \
+          --version "$TAG" \
+          "spancopy-$TAG-amd64-linux.zip"
+        fpm \
+          --fpm-options-file ../.fpm \
+          --architecture arm64 \
+          --version "$TAG" \
+          "spancopy-$TAG-arm64-linux.zip"
+        ls -hl *.deb
+        dpkg --info *.deb
+        dpkg --contents *.deb
