@@ -287,12 +287,14 @@ jobs:
           dpkg-scanpackages . /dev/null > Packages
           gzip -k -f Packages
           apt-ftparchive release . > Release
+          cd -
         done
 
     - name: Update RPM repository
       run: |
         for ARCH in amd64 arm64; do
           createrepo_c packages/rpm/"$ARCH"
+          cd -
         done
 
     - name: Upload GitHub Pages artifacts
