@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>spancopy Package Repository</title>
+</head>
+
+<body>
+    <h1>spancopy Package Repository</h1>
+
+    <h2>APT Repository</h2>
+    <pre>
+        # Add repository
+        echo "deb [trusted=yes] https://iamazeem.github.io/spancop/apt/$(dpkg --print-architecture)/ ./" | \
+            sudo tee /etc/apt/sources.list.d/spancopy.list
+
+        # Install package
+        sudo apt update
+        sudo apt install spancopy
+    </pre>
+
+    <h2>RPM Repository</h2>
+    <pre>
+        # Add repository
+        sudo tee /etc/yum.repos.d/spancopy.repo << EOF
+        [spancopy]
+        name=spancopy Repository
+        baseurl=https://iamazeem.github.io/spancopy/rpm/\$basearch
+        enabled=1
+        gpgcheck=0
+        EOF
+
+        # Install package
+        sudo yum install spancopy
+    </pre>
+</body>
+
+</html>

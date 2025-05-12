@@ -14,6 +14,10 @@ env:
   ARTIFACT_DIR: .artifacts
   ARTIFACT_RETENTION_DAYS: 5
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   version:
     runs-on: ubuntu-latest
@@ -160,10 +164,6 @@ jobs:
     needs: [version, ci]
     runs-on: windows-latest
 
-    defaults:
-      run:
-        shell: bash
-
     steps:
     - name: Install wingetcreate
       run: |
@@ -193,3 +193,131 @@ jobs:
         path: ${{ github.workspace }}/manifests
         retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
         if-no-files-found: error
+
+  prepare-linux-packages:
+    if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    needs: [version, ci]
+    runs-on: ubuntu-latest
+
+    env:
+      TAG: ${{ needs.version.outputs.TAG }}
+      AMD64_ZIP: spancopy-${{ needs.version.outputs.TAG }}-amd64-linux.zip
+      ARM64_ZIP: spancopy-${{ needs.version.outputs.TAG }}-arm64-linux.zip
+      AMD64_DEB: spancopy_${{ needs.version.outputs.TAG }}_amd64.deb
+      ARM64_DEB: spancopy_${{ needs.version.outputs.TAG }}_arm64.deb
+      AMD64_RPM: spancopy-${{ needs.version.outputs.TAG }}-1.x86_64.rpm
+      ARM64_RPM: spancopy-${{ needs.version.outputs.TAG }}-1.aarch64.rpm
+
+    steps:
+    - name: Checkout .fpm config file
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          .fpm
+          packages
+
+    - name: Download ZIP artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: spancopy-${{ env.TAG }}-*-linux.zip
+        path: ${{ env.ARTIFACT_DIR }}
+        merge-multiple: true
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y rpm dpkg-dev createrepo-c
+        sudo gem install --no-document fpm
+
+    - name: Build DEB packages
+      run: |
+        cd "$ARTIFACT_DIR"
+        ls -hl *.zip
+        fpm \
+          --fpm-options-file ../.fpm \
+          --architecture "amd64" \
+          --version "$TAG" \
+          "$AMD64_ZIP"
+        dpkg --info "$AMD64_DEB"
+        dpkg --contents "$AMD64_DEB"
+        fpm \
+          --fpm-options-file ../.fpm \
+          --architecture "arm64" \
+          --version "$TAG" \
+          "$ARM64_ZIP"
+        dpkg --info "$ARM64_DEB"
+        dpkg --contents "$ARM64_DEB"
+        ls -hl *.deb
+
+    - name: Build RPM packages
+      run: |
+        cd "$ARTIFACT_DIR"
+        ls -hl *.zip
+        fpm \
+          --fpm-options-file ../.fpm \
+          --output-type rpm \
+          --architecture "amd64" \
+          --version "$TAG" \
+          "$AMD64_ZIP"
+        rpm -qip "$AMD64_RPM"
+        rpm -qlp "$AMD64_RPM"
+        fpm \
+          --fpm-options-file ../.fpm \
+          --output-type rpm \
+          --architecture "arm64" \
+          --version "$TAG" \
+          "$ARM64_ZIP"
+        rpm -qip "$ARM64_RPM"
+        rpm -qlp "$ARM64_RPM"
+        ls -hl *.rpm
+
+    - name: Move deb and rpm files to packages directory
+      run: |
+        mkdir -p packages/{apt,rpm}/{amd64,arm64}
+        mv "$ARTIFACT_DIR/$AMD64_DEB" packages/apt/amd64/
+        mv "$ARTIFACT_DIR/$ARM64_DEB" packages/apt/arm64/
+        mv "$ARTIFACT_DIR/$AMD64_RPM" packages/rpm/amd64/
+        mv "$ARTIFACT_DIR/$ARM64_RPM" packages/rpm/arm64/
+        ls -hl packages/{apt,rpm}/{amd64,arm64}
+
+    - name: Update APT repository
+      run: |
+        for ARCH in amd64 arm64; do
+          cd packages/apt/"$ARCH"
+          dpkg-scanpackages . /dev/null > Packages
+          gzip -k -f Packages
+          apt-ftparchive release . > Release
+          cd -
+        done
+
+    - name: Update RPM repository
+      run: |
+        for ARCH in amd64 arm64; do
+          createrepo_c packages/rpm/"$ARCH"
+        done
+
+    - name: Upload GitHub Pages artifacts
+      uses: actions/upload-pages-artifact@v3
+      with:
+        name: packages
+        path: packages
+
+  publish-linux-packages:
+    if: ${{ github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/v') }}
+    needs: [prepare-linux-packages]
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      with:
+        artifact_name: packages

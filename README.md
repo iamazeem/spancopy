@@ -27,6 +27,34 @@ Download the prebuilt binaries from the
 
 ## Install
 
+### Install: Linux (`apt`)
+
+```shell
+# Add repository
+echo "deb [trusted=yes] https://iamazeem.github.io/spancop/apt/$(dpkg --print-architecture)/ ./" | \
+    sudo tee /etc/apt/sources.list.d/spancopy.list
+
+# Install package
+sudo apt update
+sudo apt install spancopy
+```
+
+### Install: Linux (`rpm`)
+
+```shell
+# Add repository
+sudo tee /etc/yum.repos.d/spancopy.repo << EOF
+[spancopy]
+name=spancopy Repository
+baseurl=https://iamazeem.github.io/spancopy/rpm/\$basearch
+enabled=1
+gpgcheck=0
+EOF
+
+# Install package
+sudo yum install spancopy
+```
+
 ### Install: Windows (`winget`)
 
 ```powershell
