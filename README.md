@@ -15,7 +15,7 @@ For more details, pleas refer to the [Usage](#usage) section.
 Supported and tested on:
 
 - Linux (AMD64 and ARM64)
-- macOS
+- macOS (AMD64 and ARM64)
 - Windows
 
 See the [CI workflow](.github/workflows/ci.yml) for more details.
@@ -31,7 +31,7 @@ Download the prebuilt binaries from the
 
 ```shell
 # Add repository
-echo "deb [trusted=yes] https://iamazeem.github.io/spancop/apt/$(dpkg --print-architecture)/ ./" | \
+echo "deb [trusted=yes] https://iamazeem.github.io/spancopy/apt/$(dpkg --print-architecture)/ ./" | \
     sudo tee /etc/apt/sources.list.d/spancopy.list
 
 # Install package
@@ -45,7 +45,7 @@ sudo apt install spancopy
 # Add repository
 sudo tee /etc/yum.repos.d/spancopy.repo << EOF
 [spancopy]
-name=spancopy Repository
+name=spancopy
 baseurl=https://iamazeem.github.io/spancopy/rpm/\$basearch
 enabled=1
 gpgcheck=0
@@ -116,7 +116,6 @@ For any feedback or to report any issues, please open an issue on
 GitHub: https://github.com/iamazeem/spancopy/issues
 
 Written by: AZEEM SAJID <azeem.sajid@gmail.com>
-
 ```
 
 ## Example
