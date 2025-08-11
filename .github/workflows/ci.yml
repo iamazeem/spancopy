@@ -217,7 +217,7 @@ jobs:
           packages
 
     - name: Download ZIP artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         pattern: spancopy-${{ env.TAG }}-*-linux.zip
         path: ${{ env.ARTIFACT_DIR }}
