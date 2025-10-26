@@ -7,3 +7,4 @@ amd64-*
 arm64-*
 artifacts
 .artifacts
+result

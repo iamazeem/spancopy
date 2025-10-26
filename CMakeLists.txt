@@ -56,12 +56,14 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 if (APPLE)
     target_link_libraries(
         ${PROJECT_NAME}
-        # -mmacosx-version-min=10.15
     )
 else()
     target_link_libraries(
         ${PROJECT_NAME}
-        -static
         ${RC_OUT_FILE}
     )
 endif()
+
+install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION bin
+)
