@@ -55,14 +55,16 @@ EOF
 sudo yum install spancopy
 ```
 
+### Install: Nix Flake (`nix`)
+
+```shell
+nix profile add github:iamazeem/spancopy
+```
+
 ### Install: Windows (`winget`)
 
 ```powershell
-# Install with alias
 winget.exe install spancopy
-
-# Install with id
-winget.exe install --id iamAzeem.spancopy
 ```
 
 ## Usage
