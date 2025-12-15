@@ -128,7 +128,9 @@ jobs:
       env:
         ARM64_LINUX: ${{ env.PREFIX == 'arm64-linux' && 'g++-aarch64-linux-gnu' || '' }}
         AMD64_WINDOWS: ${{ env.PREFIX == 'amd64-windows' && 'g++-mingw-w64' || '' }}
-      run: sudo apt install -y $ARM64_LINUX $AMD64_WINDOWS
+      run: |
+        sudo apt update
+        sudo apt install -y $ARM64_LINUX $AMD64_WINDOWS
 
     - name: Build (${{ env.PREFIX }})
       run: ./scripts/ci-build.bash
@@ -217,7 +219,7 @@ jobs:
           packages
 
     - name: Download ZIP artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         pattern: spancopy-${{ env.TAG }}-*-linux.zip
         path: ${{ env.ARTIFACT_DIR }}
