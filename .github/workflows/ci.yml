@@ -140,7 +140,7 @@ jobs:
       run: ./tests/test.bash
 
     - name: Upload (${{ env.TAR }})
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ env.TAR }}
         path: ${{ env.ARTIFACT_DIR }}/${{ env.TAR }}
@@ -148,7 +148,7 @@ jobs:
         if-no-files-found: error
 
     - name: Upload (${{ env.ZIP }})
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ env.ZIP }}
         path: ${{ env.ARTIFACT_DIR }}/${{ env.ZIP }}
@@ -189,7 +189,7 @@ jobs:
           --submit
 
     - name: Upload manifest
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: spancopy-winget-manifest
         path: ${{ github.workspace }}/manifests
